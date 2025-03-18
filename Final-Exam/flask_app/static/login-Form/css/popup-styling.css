@@ -1,0 +1,146 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+  #popup {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: .30em;
+    z-index: 99;
+    display: none;
+    min-width: 355px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -75%);
+
+}
+
+#popup h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.background-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.background-options div {
+    width: 60px;
+    height: 40px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+}
+
+.background-options div:hover {
+    border-color: #0079bf;
+}
+
+.background-options .blue {
+    background-color: #0079bf;
+}
+
+
+
+  .background-options .gradient {
+    background: linear-gradient(135deg, #0079bf, #f97316);
+}
+
+.background-options .image1 {
+    background-image: url('https://source.unsplash.com/200x100/?nature');
+    background-size: cover;
+}
+
+.background-options .image2 {
+    background-image: url('https://source.unsplash.com/200x100/?forest');
+    background-size: cover;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 1rem;
+    color: #333;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: .25em 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.error {
+    color: red;
+    font-size: 12px;
+}
+
+
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.create-button {
+    color: #111111;
+    border-radius: .25em;
+    width:100%;
+    padding: .5em .25em;
+    transition: all .5s;
+    border: none;
+}
+
+.create-button.enabled{
+    background-color: #65c1f6;
+   
+}
+
+.create-button.disabled {
+    background-color: #9c9c9cd4;
+    cursor: not-allowed;
+    opacity: 30%;
+}
+
+.button.template {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.title{
+    display: flex;
+    flex-direction: column;
+}
+
+
+#close-button{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #333;
+    border: none;
+}

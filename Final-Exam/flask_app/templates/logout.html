@@ -1,0 +1,81 @@
+{% extends 'shared/layout.html' %}
+
+{% block extracss %}
+	<link rel="stylesheet"    href="../static/login-Form/css/login-style.css">
+	<link rel="stylesheet"  href="../static/login-Form/fonts/font-awesome-4.7.0/css/font-awesome.css">
+{% endblock%}
+
+{% block extrajs %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}
+
+
+
+{% block maincontent %}
+<!-- <input type="none" value=" Login as Owner" onclick="checkCredentials()" /> -->
+<section class="snap-section" id="login"> 
+<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100">
+				<div class="login100-pic js-tilt" data-tilt>
+					<img class="login-img" src="../static/login-Form/images/login-lock-img.png" alt="IMG">
+				</div>
+
+				<form class="login100-form validate-form"  action="/logout">
+					<span class="login100-form-title">
+						Logout
+					</span>
+                    
+					<div class="container-login100-form-btn">
+                        <input class="login100-form-btn" type="submit" value="LOGOUT" title="Login button">
+					</div>
+
+                    <div class="container-login100-form-btn">
+                        <a href="/home" class="login100-form-btn" >HOME</a> </a>
+                        
+					</div>
+
+					
+				</form>
+			</div>
+		</div>
+	</div>
+    </section>
+
+<script>
+    // let count = 0;
+let count = 0;
+
+const attempts = document.getElementById('attempts');
+const tries = document.getElementById('tries');
+
+
+
+if (count > 0) {
+    attempts.style.display = 'flex';
+    tries.innerHTML = count;
+}
+
+function checkCredentials() {
+    count++;
+    // package data in a JSON object
+    var data_d = {'email': 'owner@email.com', 'password': 'password'}
+    console.log('data_d', data_d)
+
+    // SEND DATA TO SERVER VIA jQuery.ajax({})
+    jQuery.ajax({
+        url: "/processlogin",
+        data: data_d,
+        type: "POST",
+        success:function(retruned_data){
+              retruned_data = JSON.parse(retruned_data);
+              window.location.href = "/home";
+            }
+    });
+}
+</script>
+<script src="../static/main/login-Form/js/main.js"></script>
+
+{% endblock %}
+
+

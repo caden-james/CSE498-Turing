@@ -1,0 +1,106 @@
+#chat {
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: #f1f1f1;
+  border-radius: 0.25em;
+  min-height: 25vh;
+  max-height: 50vh;
+  overflow: scroll;
+  align-content: end;
+  /* box-shadow: rgba(0, 0, 0, 0.3) 0rem 1.1875rem 2.375rem, rgba(0, 0, 0, 0.22) 0rem 0.9375rem 0.75rem; */
+}
+
+.chat-popup {
+  position: absolute;
+  bottom: 0;
+  display: none;
+}
+
+.chat-popup-button {
+  position: absolute;
+  bottom: 0;
+}
+
+/* Button used to open the chat form - fixed at the bottom of the page */
+.open-button {
+  background-color: #555;
+  color: white;
+  padding: 1rem 1.25rem;
+  border: none;
+  opacity: 0.8;
+  position: fixed;
+  bottom: 1.4375rem;
+  right: 1.75rem;
+  width: 17.5rem;
+}
+
+/* The popup chat - hidden by default */
+.form-popup {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  right: 0.9375rem;
+  border: 0.1875rem solid #f1f1f1;
+  z-index: 9;
+}
+
+/* Add styles to the form container */
+.form-container {
+  max-width: 18.75rem;
+  padding: 0.625rem;
+  background-color: white;
+  border-radius: 0.25em;
+  box-shadow: rgba(0, 0, 0, 0.3) 0rem 1.1875rem 2.375rem, rgba(0, 0, 0, 0.22) 0rem 0.9375rem 0.75rem;
+  min-width: 18.75rem;
+  min-height: 12.5rem;
+  max-height: 50rem;
+  height: fit-content;
+}
+
+/* Full-width textarea */
+.form-container .message-input {
+  padding: 0.3125rem 0;
+  margin: 0.3125rem 0;
+  border: none;
+  background: #f1f1f1;
+  resize: none;
+  height: 100%;
+  align-content: center;
+  border-radius: 1.5rem;
+  width: 100%;
+}
+
+/* When the textarea gets focus, do something */
+.form-container .message-input:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+/* Set a style for the submit/login button */
+.btn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 1rem 1.25rem;
+  border: none;
+  width: 100%;
+  margin-bottom: 0.625rem;
+  opacity: 0.8;
+  border-radius: 1em;
+  box-shadow: rgba(0, 0, 0, 0.3) 0.0625rem 0.1875rem 0.03125rem;
+}
+
+.btn:hover {
+  opacity: 80%;
+  box-shadow: rgba(0, 0, 0, 0.847) 0.0625rem 0.1875rem 0.03125rem;
+}
+
+/* Add a red background color to the cancel button */
+.form-container .cancel {
+  background-color: red;
+}
+
+/* Add some hover effects to buttons */
+.form-container .btn:hover, .open-button:hover {
+  opacity: 1;
+}
