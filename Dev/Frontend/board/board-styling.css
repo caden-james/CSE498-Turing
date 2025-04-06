@@ -1,0 +1,378 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+.new-list{
+    display: flex;
+    flex-direction: row;
+}
+
+.board{
+    width: 100%;
+}
+
+.boardName{
+    text-align: left;
+    font-size: 2.5rem;
+    margin-left: 1.25rem;
+    color: #000000d4;
+
+}
+
+#root{
+    display: flex;
+    flex-direction: column;
+}
+
+#slider{
+    display: flex;
+    /* flex-direction: column; */
+    overflow: scroll;
+    height: 100vh;
+    padding: .5em;
+    gap: .1em;
+}
+
+.todoList{
+    /*border: 1px solid red;*/
+    border-radius: 4px;
+    background: rgb(235, 235, 235);
+    /* padding: 0.7em; */
+    padding: .25em 0.15em;
+    /* margin: 1em 0 1em 1em; */
+    float: left;
+    height: fit-content;
+
+
+
+    /* box-sizing: border-box; */
+    
+    flex-direction: column;
+    
+    align-self: start;
+    justify-content: space-between;
+    /* width: 272px; */
+    width: 50em;
+    border-radius: 12px;
+    
+    box-shadow: var(--ds-shadow-raised, 0px 1px 1px #091e4240, 0px 0px 1px #091e424f);
+    
+    vertical-align: top;
+    white-space: normal;
+    scroll-margin: 8px;
+
+
+    gap: .1em;
+    display: flex;
+    max-width: 300px;
+    min-width: 300px;
+
+}
+
+
+
+.card{
+    /*border: 1px solid blue;*/
+    border-radius: 4px;
+    border-bottom: rgb(180, 180, 180) 1px solid;
+    background: white;
+    margin: 0.5em 0 0 0;
+    padding: 0.5em;
+    font-size: 0.9em;
+    position: relative;
+
+    display: flex;
+    justify-content: space-between;
+
+    display: flex;
+        
+        
+}
+
+.card button{
+    visibility: hidden;
+    height: max-content;
+
+    background: none;
+    border: none;
+    padding: 0.3em;
+    
+}
+
+
+.card:hover button{
+    visibility: visible;
+}
+
+.card button:hover{
+    background-color: rgb(235, 235, 235);
+    border-radius: 4px;
+}
+
+
+.menuContainer{
+    display: flex;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+}
+
+.menu{
+    top: 0;
+    left: 0;
+    background-color: rgb(235, 235, 235);
+    width: 500px;
+    min-height: 300px;
+
+    margin: auto;
+
+    padding: 1em;
+    border-radius: 4px;
+    
+}
+
+.menuTitle{
+    font-weight: bold;
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+.menuDescription{
+    margin-bottom: 2em;
+    line-height: 1.5em;
+}
+
+.menuDescription textarea{
+    width: 100%;
+    height: 5em;
+    padding: 0.5em;
+    font-size: 1.1em;
+}
+
+
+
+.comment{
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+
+    padding: 0.5em;
+}
+
+.commentsInput{
+
+}
+
+.btn-save{
+    background-color: #5aac44;
+    color: white;
+    border: none;
+    border-radius: 4px;
+
+    padding: 0.5em;
+    margin-top: 0.5em;
+    
+}
+
+
+
+.panel-cards{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* background-color: #00c2e0; */
+    gap: .12em;
+
+
+    
+}
+
+  .panel-card{
+    display: flex;
+    width: 100%;
+    /* padding: 10px; */
+    align-items: flex-start;
+    /* gap: 15px; */
+    background-color: #0079bf;
+
+
+
+
+    /* position: relative; */
+    min-height: 36px;
+    border-radius: 8px;
+    background-color: var(--ds-surface-raised, #ffffff);
+    box-shadow: var(--ds-shadow-raised, 0px 1px 1px #091e4240, 0px 0px 1px #091e424f);
+    color: var(--ds-text, #172b4d);
+
+    scroll-margin: 8px;
+
+  }
+
+  .panel-card-text{
+    flex: 1 0 0;
+    color: #000000;
+    font-size: 1em;
+    /* font-style: normal; */
+    font-weight: 300;
+    line-height: normal;
+    text-align: left;
+    font-size: 1rem;
+    padding: .51em;
+  } 
+
+
+
+  .todoList h2{
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    text-align: left;
+    padding-bottom: .5em;
+    font-weight: 500;
+  }
+
+
+  .card-buttons{
+    display: flex;
+    display: none;
+    /* flex-direction: column; */
+    gap: .01em;
+    height: 100%;
+  }
+
+  .edit-buttons{
+    display: flex;
+    /* height: 100%; */
+    position: absolute;
+    right: 0
+  }
+
+  .input-card{
+    position: relative;
+    display: none;
+  }
+
+
+
+
+  .panel-card-add{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 0;
+    column-gap: 4px;
+  }
+
+  .add-button{
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0;
+    padding: 6px 12px 6px 8px;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--accent-text, var(--ds-text-subtle, #44546f));
+    border: none;
+  }
+  .add-button:hover{
+    /* background-color: var(--ds-surface-hover, #26262731); */
+    /* opacity: 30%; */
+    
+    background-color: #4549515c;
+  }
+
+  .add-button-text{
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  .add-icon{
+    --icon-primary-color: currentColor;
+    --icon-secondary-color: inherit;
+  }
+
+
+#input-stack{
+
+}
+  .input{
+    display: flex;
+    display: none;
+    flex-direction: row;
+    /* gap: .5em; */
+    /* width: 100%; */
+  }
+
+  .input-create{
+    width: 100%;
+  }
+
+  .ignore{
+    pointer-events: none
+  }
+
+
+
+
+input.panel-card-text{
+    border: none;
+    background-color: aliceblue;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    box-shadow: var(--ds-shadow-raised, 0px 1px 1px #091e4240, 0px 0px 1px #091e424f);
+    color: var(--ds-text, #172b4d);
+    cursor:text;
+}
+
+  
+
+
+
+.draggable-item.being-dragged {
+    opacity: 0.75;
+    transform: rotate(3deg) scale(1.05); 
+    cursor: grabbing; 
+    border: 0.3em solid rgba(255, 165, 0, 0.5); 
+    box-shadow: 0 2em 3em rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease; 
+}
+
+/* List transition when hovering over */
+.drop-zone {
+    transition: background-color 0.2s ease;
+}
+
+/* Change background color slightly of list container when hovered over */
+.drop-zone.over {
+    background-color: #5a5a5a;
+}
+
+
+
+
+
+
+.card-wrapper.locked {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.card-wrapper.locked:hover {
+  cursor: not-allowed;
+}
+
+.panel-card.locked {
+  cursor: not-allowed;
+}
+
+a:hover{
+  cursor: grab;
+}
