@@ -1,5 +1,5 @@
 #include <emscripten/bind.h>
-#include "RandomAccessSet.hpp"
+#include "RandomAccessSet/RandomAccessSet.hpp"
 
 using namespace emscripten;
 
