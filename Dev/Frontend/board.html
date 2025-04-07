@@ -69,6 +69,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdn.socket.io/3.1.1/socket.io.min.js"></script>
   <script src="board/board-scripting.js" defer></script>
-  <script src="board/chat-scripting.js" defer></script>
+  <!-- <script src="board/chat-scripting.js" defer></script> -->
+
+  <script type="module">
+    import createModule from './ras.js';
+  
+    // createModule is the default export from ras.js
+    createModule().then((Module) => {
+      // “Module” is the ready-to-use Emscripten instance
+      const RAS = new Module.RandomAccessSetInt();
+      RAS.add(929292929);
+      console.log(RAS.get(0));
+    });
+  </script>
+  
 </body>
 </html>
