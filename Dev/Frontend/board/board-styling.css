@@ -3,6 +3,7 @@
     margin: 0;
 }
 
+
 .new-list{
     display: flex;
     flex-direction: row;
@@ -10,6 +11,7 @@
 
 .board{
     width: 100%;
+    
 }
 
 .boardName{
@@ -26,12 +28,17 @@
 }
 
 #slider{
-    display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 0fr);
+  /* height: 100%; */
+  align-content: stretch;
     /* flex-direction: column; */
     overflow: scroll;
-    height: 100vh;
     padding: .5em;
     gap: .1em;
+    max-width: 70vw;
+
+    
 }
 
 .todoList{
@@ -226,12 +233,24 @@
     padding: .51em;
   } 
 
+  .panel-card-descr{
+    flex: 1 0 0;
+    color: #000000;
+    font-size: 1em;
+    /* font-style: normal; */
+    font-weight: 300;
+    line-height: normal;
+    text-align: left;
+    font-size: .8rem;
+    padding: 0 0 .5em .21em;
+  } 
+
 
 
   .todoList h2{
     font-size: clamp(1rem, 2vw, 1.25rem);
     text-align: left;
-    padding-bottom: .5em;
+    /* padding-bottom: .5em; */
     font-weight: 500;
   }
 
@@ -375,4 +394,126 @@ input.panel-card-text{
 
 a:hover{
   cursor: grab;
+}
+
+
+.container {
+  display: flex;
+  height: 100vh;
+  /* border: 2px solid black; */
+}
+
+.sidebar-left, .sidebar-right {
+  /* width: 150px; */
+  /* width: 20vw; */
+  padding: 10px;
+  box-sizing: border-box;
+  background-color: #ffffffc2;
+  border-radius: 0.85rem;
+  -webkit-box-shadow: 6px 4px 13px 0px rgba(0,0,0,0.33);
+-moz-box-shadow: 6px 4px 13px 0px rgba(0,0,0,0.33);
+box-shadow: 6px 4px 13px 0px rgba(0,0,0,0.333);
+flex: 1;
+}
+
+.sidebar-right {
+
+    
+
+}
+
+.main {
+  
+  display: flex;
+  flex-direction: column;
+  flex: 3;
+  /* overflow: scroll; */
+}
+
+.top-bar {
+  display: flex;
+  /* border-bottom: 2px solid black; */
+  gap: 10px;
+  padding-left: 0.5em;
+  padding-top: 0.5em;
+}
+
+.top-bar button {
+  padding: 10px;
+  border: none;
+  
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.board {
+  /* padding: 10px; */
+  display: flex;
+  gap: 10px;
+  /* position: relative; */
+}
+
+.task-card {
+  width: 150px;
+  height: 150px;
+  border: 2px solid black;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.tag-button {
+  width: 40px;
+  height: 20px;
+  font-size: 12px;
+}
+
+.dropdown {
+  position: absolute;
+  top: 90px;
+  left: 160px;
+  border: 2px solid black;
+  width: 120px;
+  background: white;
+  padding: 5px;
+  font-size: 12px;
+}
+
+.dropdown input {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.dropdown .tag {
+  margin: 2px 0;
+}
+
+.member-tag {
+  border: 1px solid black;
+  padding: 5px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+
+
+@media all and (max-width: 1250px) {
+  #slider{
+    display: grid;
+    grid-template-columns: repeat(2, 0fr);
+  }
+}
+
+@media all and (max-width: 650px) {
+  #slider{
+    display: grid;
+    grid-template-columns: repeat(1, 0fr);
+  }
 }
