@@ -416,6 +416,133 @@ box-shadow: 6px 4px 13px 0px rgba(0,0,0,0.333);
 flex: 1;
 }
 
+.sidebar-left {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  background-color: #f9f9f9;
+}
+
+.calendar, .notes {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar {
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+  justify-content: flex-start;
+}
+
+.notes {
+  flex: 2;
+  justify-content: flex-start;
+}
+
+.section-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+#current-date {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0;
+  font-weight: bold;
+}
+
+.calendar-header button {
+  background-color: #eee;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.calendar-header button:hover {
+  background-color: #ccc;
+}
+
+#month-label {
+  flex-grow: 1;
+  text-align: center;
+}
+
+
+#monthly-calendar {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+#monthly-calendar div {
+  text-align: center;
+  padding: 6px;
+  border-radius: 4px;
+  background-color: #eaeaea;
+}
+
+#monthly-calendar .header {
+  font-weight: bold;
+  background-color: #ddd;
+}
+
+#monthly-calendar .today {
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+}
+
+
+
+textarea {
+  flex: 1;
+  resize: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  background-color: #fff;
+  overflow-y: scroll;
+}
+
+.save-status {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.download-btn {
+  margin-top: 0.5rem;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.download-btn:hover {
+  background-color: #45a045;
+}
+
+
+
 .sidebar-right {
 
     
