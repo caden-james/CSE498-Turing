@@ -19,12 +19,26 @@
         <div class="container">
 
             <div class="sidebar-left">
-                <p class="section-title">Project Info:</p>
+                <div class="sidebar-left">
+                    <div class="calendar">
+                      <p class="section-title">📅 Today's Date:</p>
+                      <p id="current-date"></p>
+                      <div class="calendar-header">
+                        <button id="prev-month">‹</button>
+                        <span id="month-label"></span>
+                        <button id="next-month">›</button>
+                      </div>
+                      <div id="monthly-calendar"></div>
+                    </div>
+                    <div class="notes">
+                        <p class="section-title">📝 Notes:</p>
+                        <textarea id="notes-area" placeholder="Type your notes here..."></textarea>
+                        <p id="save-status" class="save-status">Last saved: never</p>
+                        <button id="download-notes" class="download-btn">Download Notes as .txt</button>
+                    </div>
+                </div>
             </div>
-   
-        
             
-
             <div class="main">
                  
                 <div class="top-bar">
