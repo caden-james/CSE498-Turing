@@ -8,21 +8,27 @@
 // namespace cse {
 
 // class Board {
-// private:
-//     DynamicString boardName;
-//     RandomAccessSet<TaskColumn> columns;
-
-// public:
-//     Board(const DynamicString& name);
-
-//     void addColumn(const TaskColumn& column);
-//     bool removeColumn(const DynamicString& columnTitle);
-
-//     TaskColumn* getColumn(const DynamicString& columnTitle);
-//     size_t getColumnCount() const;
-
-//     DynamicString getBoardName() const;
+//     private:
+//         cse::RandomAccessSet<Card> cards;
+    
+//     public:
+//         Board() = default;
+    
+//         bool addCard(const Card& card) {
+//             return cards.add(card);
+//         }
+    
+//         bool removeCard(const Card& card) {
+//             return cards.remove(card);
+//         }
+    
+//         Card getCard(size_t index) const {
+//             return cards.get(index);
+//         }
+    
+//         size_t size() const {
+//             return cards.size();
+//         }
 // };
-// }
-
+    
 #endif

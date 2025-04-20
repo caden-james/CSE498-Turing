@@ -9,21 +9,21 @@
 
 // class Card {
 //     private:
-//         AuditedPointer<DynamicString> title;
-//         AuditedPointer<DynamicString> description;
-//         TagManager tagCollection;
+//         int id;
+//         DynamicString content;  // stores a mix of strings/functions for live data
+//         std::string tag;
     
 //     public:
-//         Card(const DynamicString& title, const DynamicString& desc);
+//         Card() = default;
+//         Card(int id, const DynamicString& content, const std::string& tag = "")
+//             : id(id), content(content), tag(tag) {}
     
-//         DynamicString getTitle() const;
-//         DynamicString getDescription() const;
+//         int getId() const { return id; }
+//         std::string getContent() const { return content.toString(); }
+//         std::string getTag() const { return tag; }
     
-//         void setTitle(const DynamicString& newTitle);
-//         void setDescription(const DynamicString& newDesc);
-    
-//         void addTag(const DynamicString& tag);
-//         void removeTag(const DynamicString& tag);
-//     };
-// } 
+//         void setContent(const DynamicString& newContent) { content = newContent; }
+//         void setTag(const std::string& newTag) { tag = newTag; }
+// };
+
 #endif
