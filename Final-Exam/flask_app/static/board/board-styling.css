@@ -309,6 +309,10 @@
     --icon-secondary-color: inherit;
   }
 
+  .delete-icon{
+      height: 1rem;
+  }
+
 
 #input-stack{
 

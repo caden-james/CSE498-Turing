@@ -257,10 +257,12 @@
 
   .card-buttons{
     display: flex;
-    display: none;
-    /* flex-direction: column; */
-    gap: .01em;
-    height: 100%;
+        /* display: none; */
+        /* flex-direction: column; */
+        gap: 0.05em;
+        height: 100%;
+        padding: 3px;
+    }
   }
 
   .edit-buttons{
@@ -314,6 +316,10 @@
   .add-icon{
     --icon-primary-color: currentColor;
     --icon-secondary-color: inherit;
+  }
+
+  .card-icon{
+    height: 1rem;
   }
 
 
