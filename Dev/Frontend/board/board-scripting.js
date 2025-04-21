@@ -294,7 +294,12 @@ function setupBoard() {
         <div class="panel-card">
           <p contenteditable="true" class="panel-card-text">New Card</p>
           <div class="card-buttons">
-            <button class="delete-button">Delete</button>
+            <button class="edit-button">
+                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
+                                        </button>
+                                        <button class="delete-button">
+                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
+                                        </button>
           </div>
         </div>
       `;
