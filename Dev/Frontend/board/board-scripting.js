@@ -349,33 +349,80 @@ function setupBoard() {
   reloadCardListeners();
 
 // SEARCH FUNCTIONALITY
-document.querySelector(".search-button").addEventListener("click", () => {
+function performSearch() {
   const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
+  const resultsContainer = document.querySelector(".search-results");
   
-  if (searchTerm === '') {
-    // Show all cards if search is empty
-    document.querySelectorAll(".card-wrapper").forEach(card => {
-      card.style.display = "flex";
-    });
+  resultsContainer.innerHTML = '';
+  
+  if (!searchTerm) {
+    resultsContainer.style.display = 'none';
     return;
   }
   
-  if (typeof tagManager !== 'undefined') {
-    document.querySelectorAll(".card-wrapper").forEach(card => {
-      const cardId = card.dataset.cardId;
-      const tags = tagManager.getTags(cardId);
-      let hasMatch = false;
-      
-      // Check each tag for match
-      for (let i = 0; i < tags.size(); i++) {
-        if (tags.get(i).toLowerCase().includes(searchTerm)) {
-          hasMatch = true;
-          break;
+  const results = new Map();
+  
+  document.querySelectorAll(".card-wrapper").forEach(card => {
+    const cardId = card.dataset.cardId;
+    const cardName = card.querySelector(".panel-card-text").textContent;
+    
+    if (cardName.toLowerCase().includes(searchTerm)) {
+      results.set(cardId, cardName);
+    }
+    
+    if (typeof tagManager !== 'undefined') {
+      try {
+        const tags = tagManager.getTags(cardId);
+        for (let i = 0; i < tags.size(); i++) {
+          if (tags.get(i).toLowerCase().includes(searchTerm)) {
+            results.set(cardId, cardName);
+            break;
+          }
         }
+      } catch (e) {
+        console.error("Search error:", e);
       }
+    }
+  });
+  
+  if (results.size > 0) {
+    results.forEach((name, id) => {
+      const resultItem = document.createElement("div");
+      resultItem.className = "search-result-item";
+      resultItem.textContent = name;
       
-      card.style.display = hasMatch ? "flex" : "none";
+      resultItem.addEventListener("click", () => {
+        const card = document.querySelector(`[data-card-id="${id}"]`);
+        card.scrollIntoView({behavior: "smooth", block: "center"});
+        card.style.outline = "2px solid #4285f4";
+        setTimeout(() => card.style.outline = "", 2000);
+        resultsContainer.style.display = 'none';
+      });
+      
+      resultsContainer.appendChild(resultItem);
     });
+  } else {
+    const noResults = document.createElement("div");
+    noResults.className = "search-result-item";
+    noResults.textContent = "No results found";
+    resultsContainer.appendChild(noResults);
+  }
+  
+  resultsContainer.style.display = results.size ? 'block' : 'none';
+}
+
+// Set up event listeners
+document.querySelector(".search-button").addEventListener("click", performSearch);
+document.querySelector(".search-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    performSearch();
+  }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".search-container")) {
+    document.querySelector(".search-results").style.display = 'none';
   }
 });
 }

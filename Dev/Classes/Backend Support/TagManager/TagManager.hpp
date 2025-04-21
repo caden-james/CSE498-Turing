@@ -37,11 +37,11 @@ class TagManager {
             }
         }
 
-    public:
+public:
         // Default constructor
         TagManager() = default;
 
-    // Copy constructor
+        // Copy constructor
         TagManager(const TagManager& other) = default;
 
         // Copy assignment operator
