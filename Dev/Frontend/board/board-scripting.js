@@ -5,10 +5,7 @@ let wrapper;
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
   wrapper = new Module.AnnotatedWrapperString();
-  // Debugging purposes
-  // console.log("Emscripten RAS module loaded");
-
-  // Example usage:
+  // Debugging and testing purposes
   RAS.add(929292929);
   console.log("RAS value at 0:", RAS.get(0));
 
