@@ -23,6 +23,7 @@ private:
     std::unordered_map<string, std::unordered_set<string> > mTagToTask;
 
 public:
+    TagManager() = default;
     // Copy constructor
     TagManager(const TagManager& other) {
         // Copy both maps from the other TagManager1
