@@ -855,6 +855,82 @@ async function createWasm() {
       }
     };
 
+  var UTF8Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder() : undefined;
+  
+    /**
+     * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
+     * array that contains uint8 values, returns a copy of that string as a
+     * Javascript String object.
+     * heapOrArray is either a regular array, or a JavaScript typed array view.
+     * @param {number=} idx
+     * @param {number=} maxBytesToRead
+     * @return {string}
+     */
+  var UTF8ArrayToString = (heapOrArray, idx = 0, maxBytesToRead = NaN) => {
+      var endIdx = idx + maxBytesToRead;
+      var endPtr = idx;
+      // TextDecoder needs to know the byte length in advance, it doesn't stop on
+      // null terminator by itself.  Also, use the length info to avoid running tiny
+      // strings through TextDecoder, since .subarray() allocates garbage.
+      // (As a tiny code save trick, compare endPtr against endIdx using a negation,
+      // so that undefined/NaN means Infinity)
+      while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
+  
+      if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
+        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
+      }
+      var str = '';
+      // If building with TextDecoder, we have already computed the string length
+      // above, so test loop end condition against that
+      while (idx < endPtr) {
+        // For UTF8 byte structure, see:
+        // http://en.wikipedia.org/wiki/UTF-8#Description
+        // https://www.ietf.org/rfc/rfc2279.txt
+        // https://tools.ietf.org/html/rfc3629
+        var u0 = heapOrArray[idx++];
+        if (!(u0 & 0x80)) { str += String.fromCharCode(u0); continue; }
+        var u1 = heapOrArray[idx++] & 63;
+        if ((u0 & 0xE0) == 0xC0) { str += String.fromCharCode(((u0 & 31) << 6) | u1); continue; }
+        var u2 = heapOrArray[idx++] & 63;
+        if ((u0 & 0xF0) == 0xE0) {
+          u0 = ((u0 & 15) << 12) | (u1 << 6) | u2;
+        } else {
+          if ((u0 & 0xF8) != 0xF0) warnOnce('Invalid UTF-8 leading byte ' + ptrToString(u0) + ' encountered when deserializing a UTF-8 string in wasm memory to a JS string!');
+          u0 = ((u0 & 7) << 18) | (u1 << 12) | (u2 << 6) | (heapOrArray[idx++] & 63);
+        }
+  
+        if (u0 < 0x10000) {
+          str += String.fromCharCode(u0);
+        } else {
+          var ch = u0 - 0x10000;
+          str += String.fromCharCode(0xD800 | (ch >> 10), 0xDC00 | (ch & 0x3FF));
+        }
+      }
+      return str;
+    };
+  
+    /**
+     * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
+     * emscripten HEAP, returns a copy of that string as a Javascript String object.
+     *
+     * @param {number} ptr
+     * @param {number=} maxBytesToRead - An optional length that specifies the
+     *   maximum number of bytes to read. You can omit this parameter to scan the
+     *   string until the first 0 byte. If maxBytesToRead is passed, and the string
+     *   at [ptr, ptr+maxBytesToReadr[ contains a null byte in the middle, then the
+     *   string will cut short at that byte index (i.e. maxBytesToRead will not
+     *   produce a string of exact length [ptr, ptr+maxBytesToRead[) N.B. mixing
+     *   frequent uses of UTF8ToString() with and without maxBytesToRead may throw
+     *   JS JIT optimizations off, so it is worth to consider consistently using one
+     * @return {string}
+     */
+  var UTF8ToString = (ptr, maxBytesToRead) => {
+      assert(typeof ptr == 'number', `UTF8ToString expects a number (got ${typeof ptr})`);
+      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
+    };
+  var ___assert_fail = (condition, filename, line, func) =>
+      abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
+
   class ExceptionInfo {
       // excPtr - Thrown object pointer to wrap. Metadata pointer is calculated from it.
       constructor(excPtr) {
@@ -1908,18 +1984,6 @@ async function createWasm() {
       );
     };
 
-  var heap32VectorToArray = (count, firstElement) => {
-      var array = [];
-      for (var i = 0; i < count; i++) {
-        // TODO(https://github.com/emscripten-core/emscripten/issues/17310):
-        // Find a way to hoist the `>> 2` or `>> 3` out of this loop.
-        array.push(HEAPU32[(((firstElement)+(i * 4))>>2)]);
-      }
-      return array;
-    };
-  
-  
-  
   
   var runDestructors = (destructors) => {
       while (destructors.length) {
@@ -2076,6 +2140,97 @@ async function createWasm() {
       var invokerFn = new Function(...args, invokerFnBody)(...closureArgs);
       return createNamedFunction(humanName, invokerFn);
     }
+  
+  
+  var heap32VectorToArray = (count, firstElement) => {
+      var array = [];
+      for (var i = 0; i < count; i++) {
+        // TODO(https://github.com/emscripten-core/emscripten/issues/17310):
+        // Find a way to hoist the `>> 2` or `>> 3` out of this loop.
+        array.push(HEAPU32[(((firstElement)+(i * 4))>>2)]);
+      }
+      return array;
+    };
+  
+  
+  
+  
+  
+  var getFunctionName = (signature) => {
+      signature = signature.trim();
+      const argsIndex = signature.indexOf("(");
+      if (argsIndex === -1) return signature;
+      assert(signature.endsWith(")"), "Parentheses for argument names should match.");
+      return signature.slice(0, argsIndex);
+    };
+  var __embind_register_class_class_function = (rawClassType,
+                                            methodName,
+                                            argCount,
+                                            rawArgTypesAddr,
+                                            invokerSignature,
+                                            rawInvoker,
+                                            fn,
+                                            isAsync,
+                                            isNonnullReturn) => {
+      var rawArgTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
+      methodName = readLatin1String(methodName);
+      methodName = getFunctionName(methodName);
+      rawInvoker = embind__requireFunction(invokerSignature, rawInvoker, isAsync);
+      whenDependentTypesAreResolved([], [rawClassType], (classType) => {
+        classType = classType[0];
+        var humanName = `${classType.name}.${methodName}`;
+  
+        function unboundTypesHandler() {
+          throwUnboundTypeError(`Cannot call ${humanName} due to unbound types`, rawArgTypes);
+        }
+  
+        if (methodName.startsWith('@@')) {
+          methodName = Symbol[methodName.substring(2)];
+        }
+  
+        var proto = classType.registeredClass.constructor;
+        if (undefined === proto[methodName]) {
+          // This is the first function to be registered with this name.
+          unboundTypesHandler.argCount = argCount-1;
+          proto[methodName] = unboundTypesHandler;
+        } else {
+          // There was an existing function with the same name registered. Set up
+          // a function overload routing table.
+          ensureOverloadTable(proto, methodName, humanName);
+          proto[methodName].overloadTable[argCount-1] = unboundTypesHandler;
+        }
+  
+        whenDependentTypesAreResolved([], rawArgTypes, (argTypes) => {
+          // Replace the initial unbound-types-handler stub with the proper
+          // function. If multiple overloads are registered, the function handlers
+          // go into an overload table.
+          var invokerArgsArray = [argTypes[0] /* return value */, null /* no class 'this'*/].concat(argTypes.slice(1) /* actual params */);
+          var func = craftInvokerFunction(humanName, invokerArgsArray, null /* no class 'this'*/, rawInvoker, fn, isAsync);
+          if (undefined === proto[methodName].overloadTable) {
+            func.argCount = argCount-1;
+            proto[methodName] = func;
+          } else {
+            proto[methodName].overloadTable[argCount-1] = func;
+          }
+  
+          if (classType.registeredClass.__derivedClasses) {
+            for (const derivedClass of classType.registeredClass.__derivedClasses) {
+              if (!derivedClass.constructor.hasOwnProperty(methodName)) {
+                // TODO: Add support for overloads
+                derivedClass.constructor[methodName] = func;
+              }
+            }
+          }
+  
+          return [];
+        });
+        return [];
+      });
+    };
+
+  
+  
+  
   var __embind_register_class_constructor = (
       rawClassType,
       argCount,
@@ -2120,13 +2275,6 @@ async function createWasm() {
   
   
   
-  var getFunctionName = (signature) => {
-      signature = signature.trim();
-      const argsIndex = signature.indexOf("(");
-      if (argsIndex === -1) return signature;
-      assert(signature.endsWith(")"), "Parentheses for argument names should match.");
-      return signature.slice(0, argsIndex);
-    };
   var __embind_register_class_function = (rawClassType,
                                       methodName,
                                       argCount,
@@ -2306,6 +2454,32 @@ async function createWasm() {
   
   
   
+  
+  
+  
+  
+  
+  var __embind_register_function = (name, argCount, rawArgTypesAddr, signature, rawInvoker, fn, isAsync, isNonnullReturn) => {
+      var argTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
+      name = readLatin1String(name);
+      name = getFunctionName(name);
+  
+      rawInvoker = embind__requireFunction(signature, rawInvoker, isAsync);
+  
+      exposePublicSymbol(name, function() {
+        throwUnboundTypeError(`Cannot call ${name} due to unbound types`, argTypes);
+      }, argCount - 1);
+  
+      whenDependentTypesAreResolved([], argTypes, (argTypes) => {
+        var invokerArgsArray = [argTypes[0] /* return value */, null /* no class 'this'*/].concat(argTypes.slice(1) /* actual params */);
+        replacePublicSymbol(name, craftInvokerFunction(name, invokerArgsArray, null /* no class 'this'*/, rawInvoker, fn, isAsync), argCount - 1);
+        return [];
+      });
+    };
+
+  
+  
+  
   /** @suppress {globalThis} */
   var __embind_register_integer = (primitiveType, name, size, minRange, maxRange) => {
       name = readLatin1String(name);
@@ -2468,79 +2642,6 @@ async function createWasm() {
   
   
   
-  var UTF8Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder() : undefined;
-  
-    /**
-     * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
-     * array that contains uint8 values, returns a copy of that string as a
-     * Javascript String object.
-     * heapOrArray is either a regular array, or a JavaScript typed array view.
-     * @param {number=} idx
-     * @param {number=} maxBytesToRead
-     * @return {string}
-     */
-  var UTF8ArrayToString = (heapOrArray, idx = 0, maxBytesToRead = NaN) => {
-      var endIdx = idx + maxBytesToRead;
-      var endPtr = idx;
-      // TextDecoder needs to know the byte length in advance, it doesn't stop on
-      // null terminator by itself.  Also, use the length info to avoid running tiny
-      // strings through TextDecoder, since .subarray() allocates garbage.
-      // (As a tiny code save trick, compare endPtr against endIdx using a negation,
-      // so that undefined/NaN means Infinity)
-      while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
-  
-      if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
-        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
-      }
-      var str = '';
-      // If building with TextDecoder, we have already computed the string length
-      // above, so test loop end condition against that
-      while (idx < endPtr) {
-        // For UTF8 byte structure, see:
-        // http://en.wikipedia.org/wiki/UTF-8#Description
-        // https://www.ietf.org/rfc/rfc2279.txt
-        // https://tools.ietf.org/html/rfc3629
-        var u0 = heapOrArray[idx++];
-        if (!(u0 & 0x80)) { str += String.fromCharCode(u0); continue; }
-        var u1 = heapOrArray[idx++] & 63;
-        if ((u0 & 0xE0) == 0xC0) { str += String.fromCharCode(((u0 & 31) << 6) | u1); continue; }
-        var u2 = heapOrArray[idx++] & 63;
-        if ((u0 & 0xF0) == 0xE0) {
-          u0 = ((u0 & 15) << 12) | (u1 << 6) | u2;
-        } else {
-          if ((u0 & 0xF8) != 0xF0) warnOnce('Invalid UTF-8 leading byte ' + ptrToString(u0) + ' encountered when deserializing a UTF-8 string in wasm memory to a JS string!');
-          u0 = ((u0 & 7) << 18) | (u1 << 12) | (u2 << 6) | (heapOrArray[idx++] & 63);
-        }
-  
-        if (u0 < 0x10000) {
-          str += String.fromCharCode(u0);
-        } else {
-          var ch = u0 - 0x10000;
-          str += String.fromCharCode(0xD800 | (ch >> 10), 0xDC00 | (ch & 0x3FF));
-        }
-      }
-      return str;
-    };
-  
-    /**
-     * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
-     * emscripten HEAP, returns a copy of that string as a Javascript String object.
-     *
-     * @param {number} ptr
-     * @param {number=} maxBytesToRead - An optional length that specifies the
-     *   maximum number of bytes to read. You can omit this parameter to scan the
-     *   string until the first 0 byte. If maxBytesToRead is passed, and the string
-     *   at [ptr, ptr+maxBytesToReadr[ contains a null byte in the middle, then the
-     *   string will cut short at that byte index (i.e. maxBytesToRead will not
-     *   produce a string of exact length [ptr, ptr+maxBytesToRead[) N.B. mixing
-     *   frequent uses of UTF8ToString() with and without maxBytesToRead may throw
-     *   JS JIT optimizations off, so it is worth to consider consistently using one
-     * @return {string}
-     */
-  var UTF8ToString = (ptr, maxBytesToRead) => {
-      assert(typeof ptr == 'number', `UTF8ToString expects a number (got ${typeof ptr})`);
-      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
-    };
   var __embind_register_std_string = (rawType, name) => {
       name = readLatin1String(name);
       var stdStringIsUTF8
@@ -2834,6 +2935,23 @@ async function createWasm() {
         // TODO: assert if anything else is given?
         'toWireType': (destructors, o) => undefined,
       });
+    };
+
+
+  
+  
+  
+  var requireRegisteredType = (rawType, humanName) => {
+      var impl = registeredTypes[rawType];
+      if (undefined === impl) {
+        throwBindingError(`${humanName} has unknown type ${getTypeName(rawType)}`);
+      }
+      return impl;
+    };
+  var __emval_take_value = (type, arg) => {
+      type = requireRegisteredType(type, '_emval_take_value');
+      var v = type['readValueFromPointer'](arg);
+      return Emval.toHandle(v);
     };
 
   
@@ -5640,6 +5758,8 @@ function checkIncomingModuleAPI() {
 }
 var wasmImports = {
   /** @export */
+  __assert_fail: ___assert_fail,
+  /** @export */
   __cxa_throw: ___cxa_throw,
   /** @export */
   _abort_js: __abort_js,
@@ -5650,6 +5770,8 @@ var wasmImports = {
   /** @export */
   _embind_register_class: __embind_register_class,
   /** @export */
+  _embind_register_class_class_function: __embind_register_class_class_function,
+  /** @export */
   _embind_register_class_constructor: __embind_register_class_constructor,
   /** @export */
   _embind_register_class_function: __embind_register_class_function,
@@ -5657,6 +5779,8 @@ var wasmImports = {
   _embind_register_emval: __embind_register_emval,
   /** @export */
   _embind_register_float: __embind_register_float,
+  /** @export */
+  _embind_register_function: __embind_register_function,
   /** @export */
   _embind_register_integer: __embind_register_integer,
   /** @export */
@@ -5667,6 +5791,10 @@ var wasmImports = {
   _embind_register_std_wstring: __embind_register_std_wstring,
   /** @export */
   _embind_register_void: __embind_register_void,
+  /** @export */
+  _emval_decref: __emval_decref,
+  /** @export */
+  _emval_take_value: __emval_take_value,
   /** @export */
   _tzset_js: __tzset_js,
   /** @export */
@@ -5872,7 +6000,6 @@ var missingLibrarySymbols = [
   'demangle',
   'stackTrace',
   'getFunctionArgsName',
-  'requireRegisteredType',
   'createJsInvokerSignature',
   'PureVirtualError',
   'registerInheritedInstance',
@@ -6023,6 +6150,7 @@ var unexportedSymbols = [
   'getTypeName',
   'getFunctionName',
   'heap32VectorToArray',
+  'requireRegisteredType',
   'usesDestructorStack',
   'checkArgCount',
   'getRequiredArgCount',

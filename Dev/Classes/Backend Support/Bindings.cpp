@@ -51,6 +51,17 @@ EMSCRIPTEN_BINDINGS(annotated_wrapper_bindings) {
 //         .function("getTags", &cse::Card::getTags);
 // }
 
+// UNFINISHED ------
+EMSCRIPTEN_BINDINGS(Card_Module) {
+    class_<cse::Card>("Card")
+        .constructor<>()
+        .constructor<int, std::string>()
+        .function("getId", &cse::Card::getId)
+        .function("getContent", &cse::Card::getContent)
+        .function("setContent", &cse::Card::setContent)
+        .function("clearContent", &cse::Card::clearContent);
+}
+
 EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
     class_<cse::Aptr<int>>("AuditedPointerInt")
         .constructor<>()

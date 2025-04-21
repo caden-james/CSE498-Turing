@@ -3,11 +3,42 @@
 
 #include "../Backend Support/RandomAccessSet/RandomAccessSet.hpp"
 #include "../Backend Support/AnnotatedWrapper/AnnotatedWrapper.hpp"
+#include "../Backend Support/AuditedPointer/AuditedPointer.hpp"
+
 // #include "DynamicString.hpp"
 // #include "TagManager.hpp"
-// #include "AuditedPointer.hpp"
 
-// namespace cse {
+namespace cse {
+
+    class Card : public AnnotatedWrapper<std::string> {
+    private:
+        int mId;
+        // Need to swap in DynamicString when available
+        Aptr<std::string> mContent;
+    
+    public:
+        Card() : mId(0), mContent(new std::string("")) {}
+        Card(int id, const std::string& content)
+            : mId(id), mContent(new std::string(content)) {}
+    
+        int getId() const { return mId; }
+    
+        std::string getContent() const {
+            return *mContent;
+        }
+    
+        void setContent(const std::string& newContent) {
+            *mContent = newContent;
+        }
+    
+        void clearContent() {
+            *mContent = "";
+        }
+    };
+    
+    }
+    
+#endif
 
 // class Card : public AnnotatedWrapper {
 //     private:
@@ -52,5 +83,3 @@
 //     }
 // };
 // }
-
-#endif
