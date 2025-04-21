@@ -2,11 +2,16 @@ import createModule from '../CapstoneProject.js';
 let RAS;
 let wrapper;
 let tagManager;
+let dynamicString;
 let Card;
+let ap;
 
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
   wrapper = new Module.AnnotatedWrapperString();
+  ap = new Module.AuditedPointerInt();
+  // tagManager = new Module.TagManager();
+  // dynamicString = new Module.dynamicString();
 
   Card = Module.Card;
 
@@ -300,38 +305,74 @@ function setupBoard() {
   });
 
   // CREATE A NEW CARD
-  console.log("Number of add buttons found:", document.querySelectorAll(".dynamic-add").length);
   document.querySelectorAll(".dynamic-add").forEach((button) => {
     button.addEventListener("click", () => {
-      console.log("Add button:", button);
       const panel = button.closest(".todoList");
+      const input = panel.querySelector(".input-create");
       const panelCards = panel.querySelector(".panel-cards");
-
+      const cardName = input.value.trim() || "New Card";
+      console.log("Added card to TagManager:", cardName);
+      
+      // Create unique ID for the card
+      const cardId = 'card-' + Date.now();
+      
       const newCard = document.createElement("div");
       newCard.className = "card-wrapper draggable";
       newCard.draggable = true;
-
+      newCard.dataset.cardId = cardId;
+      
       newCard.innerHTML = `
         <div class="panel-card">
-          <p contenteditable="true" class="panel-card-text">New Card</p>
+          <p class="panel-card-text" contenteditable="true">${cardName}</p>
           <div class="card-buttons">
-            <button class="edit-button">
-                <img src="./icons/edit.png" alt="Edit" class="card-icon">
-            </button>
             <button class="delete-button">
-                <img src="./icons/trash.png" alt="Delete" class="card-icon">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
             </button>
           </div>
         </div>
       `;
-
+      
+      tagManager.addTag(cardId, cardName);
+      
       panelCards.appendChild(newCard);
-      reloadCardListeners(); // so new card gets listeners
+      input.value = "";
+      reloadCardListeners();
     });
   });
 
   // INITIALIZE
   reloadCardListeners();
+
+// SEARCH FUNCTIONALITY
+document.querySelector(".search-button").addEventListener("click", () => {
+  const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
+  
+  if (searchTerm === '') {
+    // Show all cards if search is empty
+    document.querySelectorAll(".card-wrapper").forEach(card => {
+      card.style.display = "flex";
+    });
+    return;
+  }
+  
+  if (typeof tagManager !== 'undefined') {
+    document.querySelectorAll(".card-wrapper").forEach(card => {
+      const cardId = card.dataset.cardId;
+      const tags = tagManager.getTags(cardId);
+      let hasMatch = false;
+      
+      // Check each tag for match
+      for (let i = 0; i < tags.size(); i++) {
+        if (tags.get(i).toLowerCase().includes(searchTerm)) {
+          hasMatch = true;
+          break;
+        }
+      }
+      
+      card.style.display = hasMatch ? "flex" : "none";
+    });
+  }
+});
 }
 
 // DELETE A CARD
@@ -339,6 +380,9 @@ function reloadCardListeners() {
   document.querySelectorAll(".delete-button").forEach((button) => {
     button.onclick = (e) => {
       const card = e.target.closest(".card-wrapper");
+      if (typeof tagManager !== 'undefined' && card.dataset.cardId) {
+        tagManager.clearTagsForTask(card.dataset.cardId);
+      }
       card.remove();
     };
   });

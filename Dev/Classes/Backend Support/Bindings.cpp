@@ -4,6 +4,7 @@
 #include "../Backend Main/Card.hpp"
 #include "AuditedPointer/AuditedPointer.hpp"
 #include "TagManager/TagManager.hpp"
+#include "DynamicString/DynamicString.hpp"
 
 using namespace emscripten;
 
@@ -75,7 +76,7 @@ EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
         .class_function("find", &cse::Aptr<int>::Find)
         .class_function("reset", &cse::Aptr<int>::Reset);
 
-    function("makeAuditedPointerInt", &cse::MakeAudited<int>); // factory for the make_audioed function
+    function("makeAuditedPointerInt", &cse::MakeAudited<int>); // factory for the make_audited function
 }
 
 EMSCRIPTEN_BINDINGS(DynamicString) {
