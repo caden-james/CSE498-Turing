@@ -42,6 +42,38 @@ createModule().then((Module) => {
 
   // starts the rest of the app logic
   setupBoard();
+
+  //  Enable editing for NAME/Description
+  document.querySelectorAll('.todoList.panel').forEach((stackEl, stackIdx) => {
+    const titleEl = stackEl.querySelector('h2.todo-text');
+    const descEl  = stackEl.querySelector('p.panel-card-descr');
+
+    // Turn on editing (in place)
+    titleEl.contentEditable = true;
+    descEl .contentEditable = true;
+
+    // Load saved values
+    const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
+    if (savedTitle  != null) titleEl.textContent = savedTitle;
+    const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
+    if (savedDesc   != null) descEl.textContent  = savedDesc;
+
+    // Save on blur or Enter
+    [ [titleEl, 'title'], [descEl, 'desc'] ].forEach(([el, kind]) => {
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          el.blur();
+        }
+      });
+      el.addEventListener('blur', () => {
+        const text = el.textContent.trim();
+        localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
+      });
+    });
+  });
+
+
 });
 
 let dragged = null;
