@@ -5,8 +5,8 @@
 #include "../Backend Support/AnnotatedWrapper/AnnotatedWrapper.hpp"
 #include "../Backend Support/AuditedPointer/AuditedPointer.hpp"
 
-// #include "DynamicString.hpp"
-// #include "TagManager.hpp"
+#include "../Backend Support/DynamicString/DynamicString.cpp"
+#include "../Backend Support/TagManager/TagManager.hpp"
 
 // Test class currently without DynamicString or TagManager
 namespace cse {
