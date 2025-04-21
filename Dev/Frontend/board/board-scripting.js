@@ -11,9 +11,13 @@ createModule().then((Module) => {
   wrapper = new Module.AnnotatedWrapperString();
   ap = new Module.AuditedPointerInt();
   tagManager = new Module.TagManager();
-  dynamicString = new Module.dynamicString();
+  dynamicString = new Module.DynamicString();
 
   Card = Module.Card;
+
+  const ds = Module.makeDynamicFromString("hello");
+  console.log(ds.toString()); // should be "hello"
+  ds.delete();
 
   // Test - create a new card
   const myCard = new Card(1, "Finish Homework");
