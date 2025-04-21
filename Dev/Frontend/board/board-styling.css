@@ -44,7 +44,7 @@
         height: 100%;
         align-content: baseline;
         /* flex-direction: column; */
-        overflow: auto;
+        /* overflow: auto; */
         padding: .5em;
         gap: .1em;
         max-width: 70vw;
@@ -571,7 +571,7 @@ textarea {
   display: flex;
   flex-direction: column;
   flex: 3;
-  /* overflow: scroll; */
+  overflow-x: scroll;
 }
 
 .top-bar {
