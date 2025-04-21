@@ -3,24 +3,30 @@ let RAS;
 let wrapper;
 let tagManager;
 
-function emscriptenVectorToArray(vector) {
-  const array = [];
-  for (let i = 0; i < vector.size(); i++) {
-    array.push(vector.get(i));
-  }
-  return array;
-}
-
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
   wrapper = new Module.AnnotatedWrapperString();
   tagManager = new Module.TagManager();
+
+  Card = Module.Card;
+
+  // Test - create a new card
+  const myCard = new Card(1, "Finish Homework");
+
+  console.log("Card ID:", myCard.getId());
+  console.log("Card Content:", myCard.getContent());
+
+  myCard.setContent("Updated Task");
+  console.log("New Content:", myCard.getContent());
+
+  myCard.clearContent();
+  console.log("After Clear:", myCard.getContent());
   // Debugging and testing purposes
   RAS.add(929292929);
-  console.log("RAS value at 0:", RAS.get(0));
+  console.log("RAS value test:", RAS.get(0));
 
   wrapper.addAnnotation("label", "important");
-  console.log("Annotation label:", wrapper.getAnnotation("label"));
+  console.log("Annotation label test:", wrapper.getAnnotation("label"));
 
   // starts the rest of the app logic
   setupBoard();
