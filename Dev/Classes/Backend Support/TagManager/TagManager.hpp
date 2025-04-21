@@ -41,7 +41,8 @@ class TagManager {
         // Default constructor
         TagManager() = default;
 
-        // Copy constructor
+        TagManager() = default;
+    // Copy constructor
         TagManager(const TagManager& other) = default;
 
         // Copy assignment operator

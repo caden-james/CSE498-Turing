@@ -79,21 +79,22 @@ EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
     function("makeAuditedPointerInt", &cse::MakeAudited<int>); // factory for the make_audited function
 }
 
-EMSCRIPTEN_BINDINGS(DynamicString) {
-    class_<DynamicString>("DynamicString")
-        .constructor<>()
-        .constructor<const std::string&>()
-        .constructor<DynamicString::str_fun_t>()
-        .function("toString", &DynamicString::ToString)
-        .function("appendString", &DynamicString::Append<const std::string&>)
-        .function("appendFunction", &DynamicString::Append<DynamicString::str_fun_t>);
+// EMSCRIPTEN_BINDINGS(DynamicString) {
+//     class_<DynamicString>("DynamicString")
+//         .constructor<>()
+//         .constructor<const std::string&>()
+//         .constructor<DynamicString::str_fun_t>()
+//         .function("toString", &DynamicString::ToString)
+//         .function("appendString", static_cast<void (DynamicString::*)(const std::string&)>(&DynamicString::Append))
+//         .function("appendFunction", static_cast<void (DynamicString::*)(DynamicString::str_fun_t)>(&DynamicString::Append))
+
         
-    function("createDynamicStringFunction", optional_override([](val jsFunc) {
-        return DynamicString::str_fun_t([jsFunc]() {
-            return jsFunc().as<std::string>();
-        });
-    }));
-}
+//     function("createDynamicStringFunction", optional_override([](val jsFunc) {
+//         return DynamicString::str_fun_t([jsFunc]() {
+//             return jsFunc().as<std::string>();
+//         });
+//     }));
+// }
 
 EMSCRIPTEN_BINDINGS(TagManager) {
     class_<cse::TagManager>("TagManager")
