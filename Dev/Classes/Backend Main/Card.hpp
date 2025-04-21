@@ -8,6 +8,7 @@
 // #include "DynamicString.hpp"
 // #include "TagManager.hpp"
 
+// Test class currently without DynamicString or TagManager
 namespace cse {
 
     class Card : public AnnotatedWrapper<std::string> {
