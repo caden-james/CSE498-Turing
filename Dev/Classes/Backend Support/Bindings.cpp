@@ -3,6 +3,7 @@
 #include "AnnotatedWrapper/AnnotatedWrapper.hpp"
 #include "../Backend Main/Card.hpp"
 #include "AuditedPointer/AuditedPointer.hpp"
+#include "TagManager/TagManager.hpp"
 
 using namespace emscripten;
 
