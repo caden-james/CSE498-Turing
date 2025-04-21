@@ -273,8 +273,8 @@
         gap: 0.05em;
         height: 100%;
         padding: 3px;
-    }
   }
+  
 
   .edit-buttons{
     display: flex;
@@ -295,7 +295,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 8px 0;
+    padding: 0 8px 0;
+    padding-top: 0;
     column-gap: 4px;
   }
 
@@ -576,10 +577,12 @@ textarea {
 
 .top-bar {
   display: flex;
-  /* border-bottom: 2px solid black; */
+  align-items: center;
   gap: 10px;
   padding-left: 0.5em;
   padding-top: 0.5em;
+  flex-wrap: nowrap;
+  align-items: flex-start;
 }
 
 .top-bar button {
@@ -644,6 +647,59 @@ textarea {
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 0; 
+  column-gap: 4px;
+  flex-grow: 0; 
+  width: auto; 
+  max-width: none; 
+}
+
+.search-input {
+  width: 200px; 
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: aliceblue;
+  color: var(--accent-text, var(--ds-text-subtle, #44546f));
+  font-size: 14px;
+  outline: none;
+  flex-shrink: 0; 
+}
+
+.search-button {
+  width: 60px;
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--accent-text, var(--ds-text-subtle, #44546f));
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.search-button:hover {
+  background-color: #4549515c;
+}
+
+.search-button-text {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  margin-right: 0; 
+  flex-shrink: 0; 
 }
 
 

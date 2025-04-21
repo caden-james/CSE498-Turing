@@ -23,7 +23,7 @@ EMSCRIPTEN_BINDINGS(RandomAccessSet_int) {
         .function("getIndexOf", &cse::RandomAccessSet<int>::getIndexOf);
 }
 
-EMSCRIPTEN_BINDINGS(annotated_wrapper_bindings) {
+EMSCRIPTEN_BINDINGS(AnnotatedWrapper) {
     class_<cse::AnnotatedWrapper<std::string>>("AnnotatedWrapperString")
         .constructor<>()
         .function("addAnnotation", &cse::AnnotatedWrapper<std::string>::addAnnotation)
@@ -66,3 +66,33 @@ EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
     function("makeAuditedPointerInt", &cse::MakeAudited<int>); // factory for the make_audioed function
 }
 
+EMSCRIPTEN_BINDINGS(DynamicString) {
+    class_<DynamicString>("DynamicString")
+        .constructor<>()
+        .constructor<const std::string&>()
+        .constructor<DynamicString::str_fun_t>()
+        .function("toString", &DynamicString::ToString)
+        .function("appendString", &DynamicString::Append<const std::string&>)
+        .function("appendFunction", &DynamicString::Append<DynamicString::str_fun_t>);
+        
+    function("createDynamicStringFunction", optional_override([](val jsFunc) {
+        return DynamicString::str_fun_t([jsFunc]() {
+            return jsFunc().as<std::string>();
+        });
+    }));
+}
+
+EMSCRIPTEN_BINDINGS(TagManager) {
+    class_<cse::TagManager>("TagManager")
+        .constructor<>()
+        .function("addTag", &cse::TagManager::addTag)
+        .function("removeTag", &cse::TagManager::removeTag)
+        .function("getTags", &cse::TagManager::getTags)
+        .function("getTaskTags", &cse::TagManager::getTaskTags)
+        .function("clearTagsForTask", &cse::TagManager::clearTagsForTask)
+        .function("clearTags", &cse::TagManager::clearTags)
+        .function("hasTag", &cse::TagManager::hasTag);
+    
+    register_vector<std::string>("VectorString");
+    register_map<std::string, std::string>("MapStringString");
+}

@@ -1,10 +1,20 @@
 import createModule from '../CapstoneProject.js';
 let RAS;
 let wrapper;
+let tagManager;
+
+function emscriptenVectorToArray(vector) {
+  const array = [];
+  for (let i = 0; i < vector.size(); i++) {
+    array.push(vector.get(i));
+  }
+  return array;
+}
 
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
   wrapper = new Module.AnnotatedWrapperString();
+  tagManager = new Module.TagManager();
   // Debugging and testing purposes
   RAS.add(929292929);
   console.log("RAS value at 0:", RAS.get(0));
@@ -287,53 +297,131 @@ function setupBoard() {
   document.querySelectorAll(".dynamic-add").forEach((button) => {
     button.addEventListener("click", () => {
       const panel = button.closest(".todoList");
+      const input = panel.querySelector(".input-create");
+      const tagName = input.value.trim();
+      
+      if (!tagName) return; // Don't add empty tags
+      
       const panelCards = panel.querySelector(".panel-cards");
-
-      const newCard = document.createElement("div");
-      newCard.className = "card-wrapper draggable";
-      newCard.draggable = true;
-
-      newCard.innerHTML = `
-        <div class="panel-card">
-          <p contenteditable="true" class="panel-card-text">New Card</p>
-          <div class="card-buttons">
-            <button class="edit-button">
-                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
-                                        </button>
-                                        <button class="delete-button">
-                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
-                                        </button>
-          </div>
-        </div>
-      `;
-
+      const newCard = createNewCard(tagName);
       panelCards.appendChild(newCard);
-      reloadCardListeners(); // so new card gets listeners
+      
+      input.value = ""; // Clear input
+      
+      // Set up delete button
+      newCard.querySelector(".delete-button").addEventListener("click", () => {
+        if (typeof tagManager !== 'undefined') {
+          tagManager.clearTagsForTask(newCard.id);
+        }
+        newCard.remove();
+      });
     });
   });
-
-  // INITIALIZE
-  reloadCardListeners();
-}
 
   // DELETE A CARD
   function reloadCardListeners() {
     document.querySelectorAll(".delete-button").forEach((button) => {
       button.onclick = (e) => {
         const card = e.target.closest(".card-wrapper");
+        if (typeof tagManager !== 'undefined' && card.id) {
+          const tags = emscriptenVectorToArray(tagManager.getTags(card.id));
+          tags.forEach(tag => tagManager.removeTag(card.id, tag));
+        }
         card.remove();
       };
     });
-
-    // Allow new cards to be draggable
-    document.querySelectorAll(".draggable").forEach((card) => {
-      card.addEventListener("dragstart", (e) => {
-        dragged = e.target;
-      });
-
-      card.addEventListener("dragend", (e) => {
-        e.preventDefault();
-        dragged = null;
-      });
-    });
   }
+
+  // Edit functionality
+  document.querySelectorAll(".panel-card-text").forEach(textElement => {
+    textElement.closest(".panel-card").querySelector(".edit-button")
+      .addEventListener("click", (e) => {
+        textElement.contentEditable = true;
+        textElement.focus();
+      });
+    
+    // Handle saving edits
+    textElement.addEventListener("blur", () => {
+      textElement.contentEditable = false;
+      const newName = textElement.textContent.trim();
+      const card = textElement.closest(".card-wrapper");
+      
+      if (typeof tagManager !== 'undefined' && card.id) {
+        const oldName = textElement.dataset.originalText || newName;
+        tagManager.removeTag(card.id, oldName);
+        tagManager.addTag(card.id, newName);
+        textElement.dataset.originalText = newName;
+      }
+    });
+  });
+
+  // Allow new cards to be draggable
+  document.querySelectorAll(".draggable").forEach((card) => {
+    card.addEventListener("dragstart", (e) => {
+      dragged = e.target;
+    });
+
+    card.addEventListener("dragend", (e) => {
+      e.preventDefault();
+      dragged = null;
+    });
+  });
+
+  // Search Functionality
+  document.querySelector(".search-button").addEventListener("click", () => {
+    const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
+    
+    if (searchTerm === '') {
+      // Show all if empty search
+      document.querySelectorAll(".card-wrapper").forEach(card => {
+        card.style.display = "flex";
+      });
+      return;
+    }
+    
+    if (typeof tagManager !== 'undefined') {
+      document.querySelectorAll(".card-wrapper").forEach(card => {
+        const tags = tagManager.getTags(card.id);
+        let hasMatch = false;
+        
+        // Check each tag for match
+        for (let i = 0; i < tags.size(); i++) {
+          if (tags.get(i).toLowerCase().includes(searchTerm)) {
+            hasMatch = true;
+            break;
+          }
+        }
+        
+        card.style.display = hasMatch ? "flex" : "none";
+      });
+    }
+  });
+}
+
+function createNewCard(cardName = "New Card") {
+  const cardId = 'card-' + Date.now(); 
+  const newCard = document.createElement("div");
+  newCard.className = "card-wrapper draggable";
+  newCard.draggable = true;
+  newCard.id = cardId;
+  
+  newCard.innerHTML = `
+    <div class="panel-card">
+      <p contenteditable="true" class="panel-card-text">${cardName}</p>
+      <div class="card-buttons">
+        <button class="edit-button">
+          <img src="./icons/edit.png" alt="Edit" class="card-icon">
+        </button>
+        <button class="delete-button">
+          <img src="./icons/trash.png" alt="Delete" class="card-icon">
+        </button>
+      </div>
+    </div>
+  `;
+  
+  if (typeof tagManager !== 'undefined') {
+    tagManager.addTag(cardId, cardName);
+  }
+  
+  return newCard;
+}
