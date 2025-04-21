@@ -38,6 +38,8 @@ public:
     friend DynamicString operator+(const DynamicString &lhs, const std::string &rhs);
     friend DynamicString operator+(const DynamicString &lhs, str_fun_t rhs);
 
+    void Clear();
+
 private:
     /// The container that holds both string and function segments
     std::vector<std::variant<std::string, str_fun_t>> mSegments;
@@ -97,6 +99,10 @@ inline DynamicString operator+(const DynamicString &lhs, DynamicString::str_fun_
  DynamicString result = lhs;
  result.Append(rhs);
  return result;
+}
+
+inline void DynamicString::Clear() {
+    mSegments.clear();
 }
 
 } // namespace cse

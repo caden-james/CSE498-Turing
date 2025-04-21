@@ -3,8 +3,9 @@
 
 // #include "DynamicString.hpp"
 // #include "TaskColumn.hpp"
-#include "RandomAccessSet.hpp"
+#include "../Backend Support/RandomAccessSet/RandomAccessSet.hpp"
 #include "Card.hpp"
+#include "CardHash.hpp"
 
 namespace cse {
 
