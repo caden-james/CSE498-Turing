@@ -1,5 +1,5 @@
-#ifndef TAGMANAGER_TAGMANAGER_H
-#define TAGMANAGER_TAGMANAGER_H
+#ifndef TAGMANAGER_TAGMANAGER_HPP
+#define TAGMANAGER_TAGMANAGER_HPP
 
 /**
  * @class   TagManager
@@ -10,57 +10,165 @@
  */
 
 #include <string>
+#include <vector>
 #include <unordered_map>
-#include <unordered_set>
-using std::string;
+#include <algorithm>
 
 namespace cse {
 
 class TagManager {
-private:
-    // Maps from task -> set of tags, and from tag -> set of entries
-    std::unordered_map<string, std::unordered_set<string> > mTaskToTag;
-    std::unordered_map<string, std::unordered_set<string> > mTagToTask;
+    private:
+        // Maps from task -> vector of tags, and from tag -> vector of tasks
+        std::unordered_map<std::string, std::vector<std::string>> mTaskToTag;
+        std::unordered_map<std::string, std::vector<std::string>> mTagToTask;
 
-public:
-    // Copy constructor
-    TagManager(const TagManager& other) {
-        // Copy both maps from the other TagManager1
-        mTaskToTag = other.mTaskToTag;
-        mTagToTask = other.mTagToTask;
-    }
+        // Helper function to add unique item to a vector
+        void addUnique(std::vector<std::string>& vec, const std::string& item) {
+            if (std::find(vec.begin(), vec.end(), item) == vec.end()) {
+                vec.push_back(item);
+            }
+        }
 
-    // Copy assignment operator
-    TagManager& operator=(const TagManager&) = default;
-    
-    //Move constructor
-    TagManager(TagManager && other) = default;
+        // Helper function to remove an item from a vector
+        void removeItem(std::vector<std::string>& vec, const std::string& item) {
+            auto it = std::remove(vec.begin(), vec.end(), item);
+            if (it != vec.end()) {
+                vec.erase(it, vec.end());
+            }
+        }
 
-    // Destructor
-    ~TagManager() = default;
+    public:
+        // Default constructor
+        TagManager() = default;
 
-    // 1. Adds a tag to the task
-    void addTag(const string& task, const string& tag);
+        // Copy constructor
+        TagManager(const TagManager& other) = default;
 
-    // 2. Removes a tag from the task
-    void removeTag(const string& task, const string& tag);
+        // Copy assignment operator
+        TagManager& operator=(const TagManager&) = default;
 
-    // 3. Retrieves all tags associated with an task
-    std::unordered_set<string> getTags(const string& task) const;
+        // Move constructor
+        TagManager(TagManager&& other) = default;
 
-    // 4. Retrieves all entries associated with a specific tag
-    std::unordered_set<string> getTaskTags(const string& tag) const;
+        // Destructor
+        ~TagManager() = default;
 
-    // 5. Clears all tags for a specific task
-    void clearTagsForTask(const string& task);
+        /**
+         * Adds a tag to a task
+         * 
+         * @param task
+         * @param tag
+         */
+        void addTag(const std::string& task, const std::string& tag) {
+            addUnique(mTaskToTag[task], tag);
+            addUnique(mTagToTask[tag], task);
+        }
 
-    // 6. Clears all entries associated with a specific tag
-    void clearTags(const string& tag);
+        /**
+         * Removes a tag from a task
+         * 
+         * @param task
+         * @param tag
+         */
+        void removeTag(const std::string& task, const std::string& tag) {
+            auto taskIt = mTaskToTag.find(task);
+            if (taskIt != mTaskToTag.end()) {
+                removeItem(taskIt->second, tag);
+                if (taskIt->second.empty()) {
+                    mTaskToTag.erase(taskIt);
+                }
+            }
 
-    // 7. Checks if an task has a specific tag
-    bool hasTag(const string& task, const string& tag) const;
-};
+            auto tagIt = mTagToTask.find(tag);
+            if (tagIt != mTagToTask.end()) {
+                removeItem(tagIt->second, task);
+                if (tagIt->second.empty()) {
+                    mTagToTask.erase(tagIt);
+                }
+            }
+        }
 
-#endif //TAGMANAGER_TAGMANAGER_H
+        /**
+         * Return all the tags 
+         * 
+         * @param task
+         * @return tags --> retrun empty set if no
+         */
+        std::vector<std::string> getTags(const std::string& task) const {
+            auto it = mTaskToTag.find(task);
+            if (it != mTaskToTag.end()) {
+                return it->second;
+            }
+            return {};
+        }
 
-}   // namespace cse
+        /**
+         * Return all the tags associated with all the tasks
+         * 
+         * @param task
+         * @return tags --> retrun empty set if no
+         */
+        std::vector<std::string> getTaskTags(const std::string& tag) const {
+            auto it = mTagToTask.find(tag);
+            if (it != mTagToTask.end()) {
+                return it->second;
+            }
+            return {};
+        }
+
+        /**
+         * Clears all the tags associated with the task
+         * 
+         * @param task
+         */
+        void clearTagsForTask(const std::string& task) {
+            auto it = mTaskToTag.find(task);
+            if (it != mTaskToTag.end()) {
+                for (const auto& tag : it->second) {
+                    auto& tasks = mTagToTask[tag];
+                    removeItem(tasks, task);
+                    if (tasks.empty()) {
+                        mTagToTask.erase(tag);
+                    }
+                }
+                mTaskToTag.erase(it);
+            }
+        }
+
+        /**
+         * Clears all the tags associated with a specific tag
+         * 
+         * @param tag
+         */
+        void clearTags(const std::string& tag) {
+            auto it = mTagToTask.find(tag);
+            if (it != mTagToTask.end()) {
+                for (const auto& task : it->second) {
+                    auto& tags = mTaskToTag[task];
+                    removeItem(tags, tag);
+                    if (tags.empty()) {
+                        mTaskToTag.erase(task);
+                    }
+                }
+                mTagToTask.erase(it);
+            }
+        }
+
+        /**
+         * Checks if a task has a specific tag
+         * 
+         * @param task
+         * @return bool 
+         */
+        bool hasTag(const std::string& task, const std::string& tag) const {
+            auto it = mTaskToTag.find(task);
+            if (it != mTaskToTag.end()) {
+                return std::find(it->second.begin(), it->second.end(), tag) != it->second.end();
+            }
+            return false;
+        }
+    };
+
+} // namespace cse
+
+#endif // TAGMANAGER_TAGMANAGER_H
