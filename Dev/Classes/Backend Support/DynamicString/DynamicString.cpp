@@ -4,7 +4,7 @@
  * @file DynamicString.cpp
  */
 
-#include "DynamicString.h"
+#include "DynamicString.hpp"
 #include <sstream>
 
 DynamicString::DynamicString()
