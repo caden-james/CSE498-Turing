@@ -1,16 +1,22 @@
-import createModule from '../ras.js';
+import createModule from '../CapstoneProject.js';
 let RAS;
+let wrapper;
 
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
+  wrapper = new Module.AnnotatedWrapperString();
   // Debugging purposes
   // console.log("Emscripten RAS module loaded");
 
   // Example usage:
   RAS.add(929292929);
-  console.log(RAS.get(0));
+  console.log("RAS value at 0:", RAS.get(0));
 
-  setupBoard(); // starts the rest of the app logic
+  wrapper.addAnnotation("label", "important");
+  console.log("Annotation label:", wrapper.getAnnotation("label"));
+
+  // starts the rest of the app logic
+  setupBoard();
 });
 
 let dragged = null;
