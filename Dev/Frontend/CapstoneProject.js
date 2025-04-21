@@ -40,6 +40,13 @@ var ENVIRONMENT_IS_SHELL = false;
 // refer to Module (if they choose; they can also define Module)
 
 
+// Sometimes an existing Module object exists with properties
+// meant to overwrite the default module functionality. Here
+// we collect those properties and reapply _after_ we configure
+// the current environment's defaults to avoid having to be so
+// defensive during initialization.
+var moduleOverrides = {...Module};
+
 var arguments_ = [];
 var thisProgram = './this.program';
 var quit_ = (status, toThrow) => {
@@ -109,9 +116,40 @@ readAsync = async (url) => {
   throw new Error('environment detection error');
 }
 
-var out = console.log.bind(console);
-var err = console.error.bind(console);
+var out = Module['print'] || console.log.bind(console);
+var err = Module['printErr'] || console.error.bind(console);
 
+// Merge back in the overrides
+Object.assign(Module, moduleOverrides);
+// Free the object hierarchy contained in the overrides, this lets the GC
+// reclaim data used.
+moduleOverrides = null;
+checkIncomingModuleAPI();
+
+// Emit code to handle expected values on the Module object. This applies Module.x
+// to the proper local x. This has two benefits: first, we only emit it if it is
+// expected to arrive, and second, by using a local everywhere else that can be
+// minified.
+
+if (Module['arguments']) arguments_ = Module['arguments'];legacyModuleProp('arguments', 'arguments_');
+
+if (Module['thisProgram']) thisProgram = Module['thisProgram'];legacyModuleProp('thisProgram', 'thisProgram');
+
+// perform assertions in shell.js after we set up out() and err(), as otherwise if an assertion fails it cannot print the message
+// Assertions on removed incoming Module JS APIs.
+assert(typeof Module['memoryInitializerPrefixURL'] == 'undefined', 'Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead');
+assert(typeof Module['pthreadMainPrefixURL'] == 'undefined', 'Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead');
+assert(typeof Module['cdInitializerPrefixURL'] == 'undefined', 'Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead');
+assert(typeof Module['filePackagePrefixURL'] == 'undefined', 'Module.filePackagePrefixURL option was removed, use Module.locateFile instead');
+assert(typeof Module['read'] == 'undefined', 'Module.read option was removed');
+assert(typeof Module['readAsync'] == 'undefined', 'Module.readAsync option was removed (modify readAsync in JS)');
+assert(typeof Module['readBinary'] == 'undefined', 'Module.readBinary option was removed (modify readBinary in JS)');
+assert(typeof Module['setWindowTitle'] == 'undefined', 'Module.setWindowTitle option was removed (modify emscripten_set_window_title in JS)');
+assert(typeof Module['TOTAL_MEMORY'] == 'undefined', 'Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY');
+legacyModuleProp('asm', 'wasmExports');
+legacyModuleProp('readAsync', 'readAsync');
+legacyModuleProp('readBinary', 'readBinary');
+legacyModuleProp('setWindowTitle', 'setWindowTitle');
 var IDBFS = 'IDBFS is no longer included by default; build with -lidbfs.js';
 var PROXYFS = 'PROXYFS is no longer included by default; build with -lproxyfs.js';
 var WORKERFS = 'WORKERFS is no longer included by default; build with -lworkerfs.js';
@@ -121,9 +159,6 @@ var JSFILEFS = 'JSFILEFS is no longer included by default; build with -ljsfilefs
 var OPFS = 'OPFS is no longer included by default; build with -lopfs.js';
 
 var NODEFS = 'NODEFS is no longer included by default; build with -lnodefs.js';
-
-// perform assertions in shell.js after we set up out() and err(), as otherwise
-// if an assertion fails it cannot print the message
 
 assert(!ENVIRONMENT_IS_WORKER, 'worker environment detected but not enabled at build time.  Add `worker` to `-sENVIRONMENT` to enable.');
 
@@ -144,7 +179,7 @@ assert(!ENVIRONMENT_IS_SHELL, 'shell environment detected but not enabled at bui
 // An online HTML version (which may be of a different version of Emscripten)
 //    is up at http://kripken.github.io/emscripten-site/docs/api_reference/preamble.js.html
 
-var wasmBinary;
+var wasmBinary = Module['wasmBinary'];legacyModuleProp('wasmBinary', 'wasmBinary');
 
 if (typeof WebAssembly != 'object') {
   err('no native wasm support detected');
@@ -265,6 +300,23 @@ function checkStackCookie() {
   if (h8[0] !== 0x73 || h8[1] !== 0x63) throw 'Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)';
 })();
 
+if (Module['ENVIRONMENT']) {
+  throw new Error('Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)');
+}
+
+function legacyModuleProp(prop, newName, incoming=true) {
+  if (!Object.getOwnPropertyDescriptor(Module, prop)) {
+    Object.defineProperty(Module, prop, {
+      configurable: true,
+      get() {
+        let extra = incoming ? ' (the initial value can be provided on Module, but after startup the value is only looked for on a local variable of that name)' : '';
+        abort(`\`Module.${prop}\` has been replaced by \`${newName}\`` + extra);
+
+      }
+    });
+  }
+}
+
 function consumedModuleProp(prop) {
   if (!Object.getOwnPropertyDescriptor(Module, prop)) {
     Object.defineProperty(Module, prop, {
@@ -377,21 +429,27 @@ function dbg(...args) {
 
 function updateMemoryViews() {
   var b = wasmMemory.buffer;
-  HEAP8 = new Int8Array(b);
-  HEAP16 = new Int16Array(b);
-  HEAPU8 = new Uint8Array(b);
-  HEAPU16 = new Uint16Array(b);
-  HEAP32 = new Int32Array(b);
-  HEAPU32 = new Uint32Array(b);
-  HEAPF32 = new Float32Array(b);
-  HEAPF64 = new Float64Array(b);
-  HEAP64 = new BigInt64Array(b);
-  HEAPU64 = new BigUint64Array(b);
+  Module['HEAP8'] = HEAP8 = new Int8Array(b);
+  Module['HEAP16'] = HEAP16 = new Int16Array(b);
+  Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
+  Module['HEAPU16'] = HEAPU16 = new Uint16Array(b);
+  Module['HEAP32'] = HEAP32 = new Int32Array(b);
+  Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
+  Module['HEAPF32'] = HEAPF32 = new Float32Array(b);
+  Module['HEAPF64'] = HEAPF64 = new Float64Array(b);
+  Module['HEAP64'] = HEAP64 = new BigInt64Array(b);
+  Module['HEAPU64'] = HEAPU64 = new BigUint64Array(b);
 }
 
 // end include: runtime_shared.js
+assert(!Module['STACK_SIZE'], 'STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time')
+
 assert(typeof Int32Array != 'undefined' && typeof Float64Array !== 'undefined' && Int32Array.prototype.subarray != undefined && Int32Array.prototype.set != undefined,
        'JS engine does not provide full typed array support');
+
+// If memory is defined in wasm, the user can't provide it, or set INITIAL_MEMORY
+assert(!Module['wasmMemory'], 'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally');
+assert(!Module['INITIAL_MEMORY'], 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
 
 function preRun() {
   if (Module['preRun']) {
@@ -401,9 +459,7 @@ function preRun() {
     }
   }
   consumedModuleProp('preRun');
-  // Begin ATPRERUNS hooks
   callRuntimeCallbacks(onPreRuns);
-  // End ATPRERUNS hooks
 }
 
 function initRuntime() {
@@ -412,16 +468,12 @@ function initRuntime() {
 
   checkStackCookie();
 
-  // Begin ATINITS hooks
   if (!Module['noFSInit'] && !FS.initialized) FS.init();
 TTY.init();
-  // End ATINITS hooks
 
   wasmExports['__wasm_call_ctors']();
 
-  // Begin ATPOSTCTORS hooks
   FS.ignorePermissions = false;
-  // End ATPOSTCTORS hooks
 }
 
 function postRun() {
@@ -435,9 +487,7 @@ function postRun() {
   }
   consumedModuleProp('postRun');
 
-  // Begin ATPOSTRUNS hooks
   callRuntimeCallbacks(onPostRuns);
-  // End ATPOSTRUNS hooks
 }
 
 // A counter of dependencies for calling run(). If we need to
@@ -567,10 +617,10 @@ var wasmBinaryFile;
 
 function findWasmBinary() {
   if (Module['locateFile']) {
-    return locateFile('ras.wasm');
+    return locateFile('CapstoneProject.wasm');
   }
   // Use bundler-friendly `new URL(..., import.meta.url)` pattern; works in browsers too.
-  return new URL('ras.wasm', import.meta.url).href;
+  return new URL('CapstoneProject.wasm', import.meta.url).href;
 }
 
 function getBinarySync(file) {
@@ -695,7 +745,8 @@ async function createWasm() {
     return new Promise((resolve, reject) => {
       try {
         Module['instantiateWasm'](info, (mod, inst) => {
-          resolve(receiveInstance(mod, inst));
+          receiveInstance(mod, inst);
+          resolve(mod.exports);
         });
       } catch(e) {
         err(`Module.instantiateWasm callback failed with error: ${e}`);
@@ -736,10 +787,10 @@ async function createWasm() {
       }
     };
   var onPostRuns = [];
-  var addOnPostRun = (cb) => onPostRuns.push(cb);
+  var addOnPostRun = (cb) => onPostRuns.unshift(cb);
 
   var onPreRuns = [];
-  var addOnPreRun = (cb) => onPreRuns.push(cb);
+  var addOnPreRun = (cb) => onPreRuns.unshift(cb);
 
 
   
@@ -762,7 +813,7 @@ async function createWasm() {
     }
   }
 
-  var noExitRuntime = true;
+  var noExitRuntime = Module['noExitRuntime'] || true;
 
   var ptrToString = (ptr) => {
       assert(typeof ptr === 'number');
@@ -3103,26 +3154,30 @@ async function createWasm() {
       return getEnvStrings.strings;
     };
   
+  var stringToAscii = (str, buffer) => {
+      for (var i = 0; i < str.length; ++i) {
+        assert(str.charCodeAt(i) === (str.charCodeAt(i) & 0xff));
+        HEAP8[buffer++] = str.charCodeAt(i);
+      }
+      // Null-terminate the string
+      HEAP8[buffer] = 0;
+    };
   var _environ_get = (__environ, environ_buf) => {
       var bufSize = 0;
-      var envp = 0;
-      for (var string of getEnvStrings()) {
+      getEnvStrings().forEach((string, i) => {
         var ptr = environ_buf + bufSize;
-        HEAPU32[(((__environ)+(envp))>>2)] = ptr;
-        bufSize += stringToUTF8(string, ptr, Infinity) + 1;
-        envp += 4;
-      }
+        HEAPU32[(((__environ)+(i*4))>>2)] = ptr;
+        stringToAscii(string, ptr);
+        bufSize += string.length + 1;
+      });
       return 0;
     };
 
-  
   var _environ_sizes_get = (penviron_count, penviron_buf_size) => {
       var strings = getEnvStrings();
       HEAPU32[((penviron_count)>>2)] = strings.length;
       var bufSize = 0;
-      for (var string of strings) {
-        bufSize += lengthBytesUTF8(string) + 1;
-      }
+      strings.forEach((string) => bufSize += string.length + 1);
       HEAPU32[((penviron_buf_size)>>2)] = bufSize;
       return 0;
     };
@@ -3755,7 +3810,7 @@ async function createWasm() {
       FS.createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
     };
   
-  var preloadPlugins = [];
+  var preloadPlugins = Module['preloadPlugins'] || [];
   var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
       // Ensure plugins are ready.
       if (typeof Browser != 'undefined') Browser.init();
@@ -4086,12 +4141,7 @@ async function createWasm() {
   
             if (parts[i] === '..') {
               current_path = PATH.dirname(current_path);
-              if (FS.isRoot(current)) {
-                path = current_path + '/' + parts.slice(i + 1).join('/');
-                continue linkloop;
-              } else {
-                current = current.parent;
-              }
+              current = current.parent;
               continue;
             }
   
@@ -5837,13 +5887,25 @@ var wasmImports = {
   /** @export */
   _embind_register_memory_view: __embind_register_memory_view,
   /** @export */
+  _embind_register_optional: __embind_register_optional,
+  /** @export */
   _embind_register_std_string: __embind_register_std_string,
   /** @export */
   _embind_register_std_wstring: __embind_register_std_wstring,
   /** @export */
   _embind_register_void: __embind_register_void,
   /** @export */
+  _emval_as: __emval_as,
+  /** @export */
+  _emval_call: __emval_call,
+  /** @export */
   _emval_decref: __emval_decref,
+  /** @export */
+  _emval_get_method_caller: __emval_get_method_caller,
+  /** @export */
+  _emval_incref: __emval_incref,
+  /** @export */
+  _emval_run_destructors: __emval_run_destructors,
   /** @export */
   _emval_take_value: __emval_take_value,
   /** @export */
@@ -5950,7 +6012,6 @@ var missingLibrarySymbols = [
   'formatString',
   'intArrayToString',
   'AsciiToString',
-  'stringToAscii',
   'stringToNewUTF8',
   'stringToUTF8OnStack',
   'writeArrayToMemory',
@@ -6066,7 +6127,7 @@ var missingLibrarySymbols = [
 ];
 missingLibrarySymbols.forEach(missingLibrarySymbol)
 
-  var unexportedSymbols = [
+var unexportedSymbols = [
   'run',
   'addRunDependency',
   'removeRunDependency',
@@ -6076,16 +6137,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'abort',
   'wasmMemory',
   'wasmExports',
-  'HEAPF32',
-  'HEAPF64',
-  'HEAP8',
-  'HEAPU8',
-  'HEAP16',
-  'HEAPU16',
-  'HEAP32',
-  'HEAPU32',
-  'HEAP64',
-  'HEAPU64',
   'writeStackCookie',
   'checkStackCookie',
   'INT53_MAX',
@@ -6125,6 +6176,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'stringToUTF8',
   'lengthBytesUTF8',
   'intArrayFromString',
+  'stringToAscii',
   'UTF16Decoder',
   'UTF16ToString',
   'stringToUTF16',
@@ -6274,101 +6326,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
-  // End runtime exports
-  // Begin JS library exports
-  // End JS library exports
 
-// end include: postlibrary.js
-
-function checkIncomingModuleAPI() {
-  ignoredModuleProp('fetchSettings');
-}
-var wasmImports = {
-  /** @export */
-  __assert_fail: ___assert_fail,
-  /** @export */
-  __cxa_throw: ___cxa_throw,
-  /** @export */
-  _abort_js: __abort_js,
-  /** @export */
-  _embind_register_bigint: __embind_register_bigint,
-  /** @export */
-  _embind_register_bool: __embind_register_bool,
-  /** @export */
-  _embind_register_class: __embind_register_class,
-  /** @export */
-  _embind_register_class_class_function: __embind_register_class_class_function,
-  /** @export */
-  _embind_register_class_constructor: __embind_register_class_constructor,
-  /** @export */
-  _embind_register_class_function: __embind_register_class_function,
-  /** @export */
-  _embind_register_emval: __embind_register_emval,
-  /** @export */
-  _embind_register_float: __embind_register_float,
-  /** @export */
-  _embind_register_function: __embind_register_function,
-  /** @export */
-  _embind_register_integer: __embind_register_integer,
-  /** @export */
-  _embind_register_memory_view: __embind_register_memory_view,
-  /** @export */
-  _embind_register_optional: __embind_register_optional,
-  /** @export */
-  _embind_register_std_string: __embind_register_std_string,
-  /** @export */
-  _embind_register_std_wstring: __embind_register_std_wstring,
-  /** @export */
-  _embind_register_void: __embind_register_void,
-  /** @export */
-  _emval_as: __emval_as,
-  /** @export */
-  _emval_call: __emval_call,
-  /** @export */
-  _emval_decref: __emval_decref,
-  /** @export */
-  _emval_get_method_caller: __emval_get_method_caller,
-  /** @export */
-  _emval_incref: __emval_incref,
-  /** @export */
-  _emval_run_destructors: __emval_run_destructors,
-  /** @export */
-  _emval_take_value: __emval_take_value,
-  /** @export */
-  _tzset_js: __tzset_js,
-  /** @export */
-  emscripten_resize_heap: _emscripten_resize_heap,
-  /** @export */
-  environ_get: _environ_get,
-  /** @export */
-  environ_sizes_get: _environ_sizes_get,
-  /** @export */
-  fd_close: _fd_close,
-  /** @export */
-  fd_read: _fd_read,
-  /** @export */
-  fd_seek: _fd_seek,
-  /** @export */
-  fd_write: _fd_write
-};
-var wasmExports = await createWasm();
-var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
-var _malloc = createExportWrapper('malloc', 1);
-var ___getTypeName = createExportWrapper('__getTypeName', 1);
-var _fflush = createExportWrapper('fflush', 1);
-var _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end']
-var _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base']
-var _strerror = createExportWrapper('strerror', 1);
-var _free = createExportWrapper('free', 1);
-var _emscripten_stack_init = wasmExports['emscripten_stack_init']
-var _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free']
-var __emscripten_stack_restore = wasmExports['_emscripten_stack_restore']
-var __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc']
-var _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current']
-
-
-// include: postamble.js
-// === Auto-generated postamble setup entry stuff ===
 
 var calledRun;
 
@@ -6470,17 +6428,14 @@ function checkUnflushedContent() {
   }
 }
 
-function preInit() {
-  if (Module['preInit']) {
-    if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
-    while (Module['preInit'].length > 0) {
-      Module['preInit'].shift()();
-    }
+if (Module['preInit']) {
+  if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
+  while (Module['preInit'].length > 0) {
+    Module['preInit'].pop()();
   }
-  consumedModuleProp('preInit');
 }
+consumedModuleProp('preInit');
 
-preInit();
 run();
 
 // end include: postamble.js
