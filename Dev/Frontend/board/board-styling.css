@@ -44,7 +44,7 @@
         height: 100%;
         align-content: baseline;
         /* flex-direction: column; */
-        overflow: auto;
+        /* overflow: auto; */
         padding: .5em;
         gap: .1em;
         max-width: 70vw;
@@ -295,7 +295,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px 0;
     padding-top: 0;
     column-gap: 4px;
   }
@@ -572,7 +571,7 @@ textarea {
   display: flex;
   flex-direction: column;
   flex: 3;
-  /* overflow: scroll; */
+  overflow-x: scroll;
 }
 
 .top-bar {
@@ -661,7 +660,7 @@ textarea {
 
 .search-input {
   width: 200px; 
-  padding: 6px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: none;
   background-color: aliceblue;

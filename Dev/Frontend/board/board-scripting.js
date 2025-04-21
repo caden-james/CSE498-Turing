@@ -10,8 +10,8 @@ createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
   wrapper = new Module.AnnotatedWrapperString();
   ap = new Module.AuditedPointerInt();
-  // tagManager = new Module.TagManager();
-  // dynamicString = new Module.dynamicString();
+  tagManager = new Module.TagManager();
+  dynamicString = new Module.dynamicString();
 
   Card = Module.Card;
 
