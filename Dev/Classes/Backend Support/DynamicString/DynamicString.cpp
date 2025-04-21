@@ -4,10 +4,10 @@
  * @file DynamicString.cpp
  */
 
-#include "DynamicString.h"
+#include "DynamicString.hpp"
 #include <sstream>
 
-DynamicString::DynamicString()
+cse::DynamicString::DynamicString()
 {
     // Default when mSegments is empty
 }
@@ -16,7 +16,7 @@ DynamicString::DynamicString()
  * @brief Constructs a DynamicString initialized with one static string segment.
  * @param staticStr The initial static string.
  */
-DynamicString::DynamicString(const std::string &staticStr)
+cse::DynamicString::DynamicString(const std::string &staticStr)
 {
     mSegments.push_back(staticStr);
 }
@@ -25,7 +25,7 @@ DynamicString::DynamicString(const std::string &staticStr)
  * @brief Constructs a DynamicString initialized with one dynamic function segment.
  * @param func The function returning a std::string, invoked on each ToString() call.
  */
-DynamicString::DynamicString(str_fun_t func)
+cse::DynamicString::DynamicString(str_fun_t func)
 {
     mSegments.push_back(func);
 }
@@ -36,7 +36,7 @@ DynamicString::DynamicString(str_fun_t func)
  * @param staticStr The static string to append.
  * @return A reference to this DynamicString, allowing chained calls.
  */
-DynamicString& DynamicString::Append(const std::string &staticStr)
+cse::DynamicString& cse::DynamicString::Append(const std::string &staticStr)
 {
     mSegments.push_back(staticStr);
     return *this;
@@ -48,7 +48,7 @@ DynamicString& DynamicString::Append(const std::string &staticStr)
  * @param func The std::function<std::string()> to append.
  * @return A reference to this DynamicString, allowing chained calls.
  */
-DynamicString& DynamicString::Append(str_fun_t func)
+cse::DynamicString& cse::DynamicString::Append(str_fun_t func)
 {
     mSegments.push_back(func);
     return *this;
@@ -63,10 +63,10 @@ DynamicString& DynamicString::Append(str_fun_t func)
  * @param rhs A static string to append.
  * @return A new DynamicString containing lhs followed by rhs.
  */
-DynamicString operator+(const DynamicString &lhs, const std::string &rhs)
+cse::DynamicString operator+(const cse::DynamicString &lhs, const std::string &rhs)
 {
     // Creates a new DynamicString object initialized from lhs
-    DynamicString result(lhs);
+    cse::DynamicString result(lhs);
 
     // Adds the string segment to the existing DynamicString object
     result.Append(rhs);
@@ -85,9 +85,9 @@ DynamicString operator+(const DynamicString &lhs, const std::string &rhs)
  * @param rhs A std::function that returns a std::string.
  * @return A new DynamicString containing lhs followed by the function segment.
  */
-DynamicString operator+(const DynamicString &lhs, DynamicString::str_fun_t rhs)
+cse::DynamicString operator+(const cse::DynamicString &lhs, cse::DynamicString::str_fun_t rhs)
 {
-    DynamicString result(lhs);
+    cse::DynamicString result(lhs);
     result.Append(rhs);
     return result;
 }
@@ -100,7 +100,7 @@ DynamicString operator+(const DynamicString &lhs, DynamicString::str_fun_t rhs)
  *
  * @return A std::string containing the combined text of all segments.
  */
-std::string DynamicString::ToString() const
+std::string cse::DynamicString::ToString() const
 {
     std::string result; // create an initial string
     for (const auto &segment : mSegments)

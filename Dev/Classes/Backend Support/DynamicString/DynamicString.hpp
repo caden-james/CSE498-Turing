@@ -1,3 +1,6 @@
+#ifndef DYNAMICSTRING_H
+#define DYNAMICSTRING_H
+
 /**
  * @author Hannah Dale
  * @file DynamicString.h
@@ -15,6 +18,7 @@
  * @brief A class that holds both static and dynamic string segments, constructing
  *        a full string on demand by concatenating all segments.
  */
+namespace cse {
 class DynamicString {
 public:
     /// Alias to represent a dynamic text segment
@@ -40,3 +44,6 @@ private:
     /// The container that holds both string and function segments
     std::vector<std::variant<std::string, str_fun_t>> mSegments;
 };
+}
+
+#endif
