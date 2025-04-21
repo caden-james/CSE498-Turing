@@ -719,3 +719,15 @@ textarea {
     max-width: 40vw;
   }
 }
+
+
+.highlighted{
+  background-color: #FFFF00;
+  text-decoration: underline;
+  font-weight: bolder;
+}
+
+.highlighted-text{
+  text-decoration: underline;
+  font-weight: bolder;
+}

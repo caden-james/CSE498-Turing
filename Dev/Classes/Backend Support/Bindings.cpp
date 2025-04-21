@@ -108,5 +108,4 @@ EMSCRIPTEN_BINDINGS(TagManager) {
         .function("hasTag", &cse::TagManager::hasTag);
     
     register_vector<std::string>("VectorString");
-    register_map<std::string, std::string>("MapStringString");
 }
