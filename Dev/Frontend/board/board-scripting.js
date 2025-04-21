@@ -314,26 +314,22 @@ function setupBoard() {
   // CREATE A NEW CARD
   document.querySelector(".add-button").addEventListener("click", () => {
     const slider = document.getElementById("slider");
+    const uniqueId = `task-${Date.now()}`;
   
     const newColumn = document.createElement("div");
     newColumn.className = "todoList panel dropzone";
-  
-    const uniqueId = `card-${Date.now()}`;
   
     newColumn.innerHTML = `
       <h2 class="todo-text ignore">NAME</h2>
       <p class="panel-card-descr">Description</p>
   
-      <div class="panel-cards"
-           onmouseover="this.querySelector('.card-buttons')?.style.display='flex'"
-           onmouseout="this.querySelector('.card-buttons')?.style.display='none'">
-      </div>
+      <div class="panel-cards"></div>
   
       <div class="panel-card-add">
         <div class="input" id="input-stack-${uniqueId}">
           <input type="text" placeholder="Tag Name" class="input-create" />
         </div>
-        <button class="dynamic-add">
+        <button class="add-button dynamic-add">
           <span class="add-button-text">+ Add a Tag</span>
         </button>
       </div>
@@ -341,9 +337,43 @@ function setupBoard() {
   
     slider.appendChild(newColumn);
   
-    // Re-initialize logic for adding tags/cards to this new column
-    setupBoard();
+    // manually re-bind dynamic-add to this specific column
+    const input = newColumn.querySelector(".input-create");
+    const panelCards = newColumn.querySelector(".panel-cards");
+    const button = newColumn.querySelector(".dynamic-add");
+  
+    button.addEventListener("click", () => {
+      const cardName = input.value.trim() || "New Tag";
+      const cardId = Date.now(); // Use a safe ID
+  
+      const card = new Card(cardId % 2147483647, cardName);
+      board.addCard(card);
+      card.addTag(cardName);
+  
+      const newCard = document.createElement("div");
+      newCard.className = "card-wrapper draggable";
+      newCard.draggable = true;
+      newCard.dataset.cardId = cardId;
+  
+      newCard.innerHTML = `
+        <div class="panel-card">
+          <p class="panel-card-text" contenteditable="true">${card.getContent()}</p>
+          <div class="card-buttons">
+            <button class="delete-button">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
+            </button>
+          </div>
+        </div>
+      `;
+  
+      panelCards.appendChild(newCard);
+      input.value = "";
+      reloadCardListeners();
+    });
+  
+    reloadCardListeners(); // Make sure it's draggable
   });
+  
 
   // INITIALIZE
   reloadCardListeners();
