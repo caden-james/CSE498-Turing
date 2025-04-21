@@ -80,20 +80,31 @@ EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
 }
 
 EMSCRIPTEN_BINDINGS(DynamicString) {
-    class_<DynamicString>("DynamicString")
+    class_<cse::DynamicString>("DynamicString")
         .constructor<>()
-        .constructor<const std::string&>()
-        .constructor<DynamicString::str_fun_t>()
-        .function("toString", &DynamicString::ToString)
-        .function("appendString", &DynamicString::Append<const std::string&>)
-        .function("appendFunction", &DynamicString::Append<DynamicString::str_fun_t>);
+        .function("toString", &cse::DynamicString::ToString)
+        .function("appendString", static_cast<cse::DynamicString&(cse::DynamicString::*)(const std::string&)>(&cse::DynamicString::Append))
+        .function("appendFunction", static_cast<cse::DynamicString&(cse::DynamicString::*)(cse::DynamicString::str_fun_t)>(&cse::DynamicString::Append));
+
+    function("makeDynamicFromString",
+        optional_override([](const std::string& str) {
+            return new cse::DynamicString(str);
+        }),
+        allow_raw_pointers()
+    );
+    
+    function("makeDynamicFromFunction",
+        optional_override([](val jsFunc) {
+            cse::DynamicString::str_fun_t func = [jsFunc]() {
+                return jsFunc().as<std::string>();
+            };
+            return new cse::DynamicString(func);
+        }),
+        allow_raw_pointers()
+    );
         
-    function("createDynamicStringFunction", optional_override([](val jsFunc) {
-        return DynamicString::str_fun_t([jsFunc]() {
-            return jsFunc().as<std::string>();
-        });
-    }));
 }
+
 
 EMSCRIPTEN_BINDINGS(TagManager) {
     class_<cse::TagManager>("TagManager")
@@ -107,5 +118,4 @@ EMSCRIPTEN_BINDINGS(TagManager) {
         .function("hasTag", &cse::TagManager::hasTag);
     
     register_vector<std::string>("VectorString");
-    register_map<std::string, std::string>("MapStringString");
 }
