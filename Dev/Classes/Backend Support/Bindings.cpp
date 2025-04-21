@@ -19,3 +19,4 @@ EMSCRIPTEN_BINDINGS(RandomAccessSet_int) {
         .function("size", &cse::RandomAccessSet<int>::size)
         .function("getIndexOf", &cse::RandomAccessSet<int>::getIndexOf);
 }
+

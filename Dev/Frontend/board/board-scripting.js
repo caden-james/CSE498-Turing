@@ -3,7 +3,8 @@ let RAS;
 
 createModule().then((Module) => {
   RAS = new Module.RandomAccessSetInt();
-  console.log("Emscripten RAS module loaded");
+  // Debugging purposes
+  // console.log("Emscripten RAS module loaded");
 
   // Example usage:
   RAS.add(929292929);
