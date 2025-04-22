@@ -2,6 +2,7 @@
 #include "RandomAccessSet/RandomAccessSet.hpp"
 #include "AnnotatedWrapper/AnnotatedWrapper.hpp"
 #include "../Backend Main/Card.hpp"
+#include "../Backend Main/Board.hpp"
 #include "AuditedPointer/AuditedPointer.hpp"
 #include "TagManager/TagManager.hpp"
 #include "DynamicString/DynamicString.hpp"
@@ -41,27 +42,18 @@ EMSCRIPTEN_BINDINGS(AnnotatedWrapper) {
         .function("getFontSize", &cse::AnnotatedWrapper<std::string>::getFontSize);
 }
 
-// EMSCRIPTEN_BINDINGS(CardBindings) {
-//     class_<cse::Card>("Card")
-//         .constructor<int, std::string>()
-//         .function("getId", &cse::Card::getId)
-//         .function("getContent", &cse::Card::getContent)
-//         .function("setContent", &cse::Card::setContent)
-//         .function("addTag", &cse::Card::addTag)
-//         .function("removeTag", &cse::Card::removeTag)
-//         .function("hasTag", &cse::Card::hasTag)
-//         .function("getTags", &cse::Card::getTags);
-// }
-
-// UNFINISHED ------
 EMSCRIPTEN_BINDINGS(Card_Module) {
-    class_<cse::Card>("Card")
+    emscripten::class_<cse::Card>("Card")
         .constructor<>()
         .constructor<int, std::string>()
         .function("getId", &cse::Card::getId)
         .function("getContent", &cse::Card::getContent)
         .function("setContent", &cse::Card::setContent)
-        .function("clearContent", &cse::Card::clearContent);
+        .function("clearContent", &cse::Card::clearContent)
+        .function("addTag", &cse::Card::addTag)
+        .function("removeTag", &cse::Card::removeTag)
+        .function("hasTag", &cse::Card::hasTag)
+        .function("getTags", &cse::Card::getTags);
 }
 
 EMSCRIPTEN_BINDINGS(AuditedPointer_int) {
@@ -116,6 +108,16 @@ EMSCRIPTEN_BINDINGS(TagManager) {
         .function("clearTagsForTask", &cse::TagManager::clearTagsForTask)
         .function("clearTags", &cse::TagManager::clearTags)
         .function("hasTag", &cse::TagManager::hasTag);
-    
-    register_vector<std::string>("VectorString");
+
+    emscripten::register_vector<std::string>("VectorString");
 }
+
+EMSCRIPTEN_BINDINGS(Board_Module) {
+    emscripten::class_<cse::Board>("Board")
+        .constructor<>()
+        .function("addCard", &cse::Board::addCard)
+        .function("removeCard", &cse::Board::removeCard)
+        .function("getCard", &cse::Board::getCard)
+        .function("size", &cse::Board::size);
+}
+
