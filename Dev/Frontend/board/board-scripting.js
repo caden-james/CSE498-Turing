@@ -465,6 +465,18 @@ function setupBoard() {
     armedColumn = null;
   });
 
+  document.addEventListener('click', e => {
+    // if nothing is armed – nothing to do
+    if (!armedColumn) return;
+  
+    // if the click happened *inside* the armed column, keep it armed
+    if (e.target.closest('.todoList.panel.armed')) return;
+  
+    // otherwise remove the outline and forget the reference
+    armedColumn.classList.remove('armed');
+    armedColumn = null;
+  });
+
 }
 
 function setupAllDynamicAddButtons() {
