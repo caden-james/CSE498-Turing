@@ -270,7 +270,8 @@
     line-break: strict;
     /* overflow-y: initial; */
     text-wrap: nowrap;
-}
+  }
+
 
 
   .card-buttons{
