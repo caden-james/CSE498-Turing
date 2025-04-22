@@ -17,8 +17,6 @@
   <section class="snap-section" id="login"> 
     <div class="limiter">
         <div class="container">
-
-
                 <div class="sidebar-left">
                     <div class="calendar">
                       <p class="section-title">📅 Today's Date:</p>
@@ -126,6 +124,20 @@
                                 Add a Tag
                             </button>
                         </div>
+                        <div class="panel-card-footer">
+                            <label class="status-label">
+                              Status:
+                              <select class="task-status">
+                                <option>Not Started</option>
+                                <option>In Progress</option>
+                                <option>Complete</option>
+                              </select>
+                            </label>
+                            <label class="due-label">
+                              Due:
+                              <input type="date" class="task-due" />
+                            </label>
+                          </div>
                     </div>
                     <!-- {% endfor %} -->
 
@@ -212,13 +224,8 @@
                                 Add a Tag
                             </button>
                         </div>
-                    </div>
-
-                    
-
-                        
-                        
-                    
+                    </div>   
+        
                     <div class="todoList panel dropzone">
                         <h2 class="todo-text" contenteditable="true">Card Name</h2>
                         <p class="panel-card-descr" contenteditable="true">Description</p>
@@ -243,10 +250,10 @@
                                         <button class="save-button" disabled>Save</button>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
-
-                        
+                
                         <div class="panel-card-add">
                             <div class="input input-stack">
                                 <input type="text" class="input-create" maxlength="30" placeholder="Enter Stack title">

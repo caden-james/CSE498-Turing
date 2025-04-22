@@ -43,37 +43,6 @@ createModule().then((Module) => {
   // starts the rest of the app logic
   setupBoard();
 
-  //  Enable editing for NAME/Description
-  document.querySelectorAll('.todoList.panel').forEach((stackEl, stackIdx) => {
-    const titleEl = stackEl.querySelector('h2.todo-text');
-    const descEl  = stackEl.querySelector('p.panel-card-descr');
-
-    // Turn on editing (in place)
-    titleEl.contentEditable = true;
-    descEl .contentEditable = true;
-
-    // Load saved values
-    const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
-    if (savedTitle  != null) titleEl.textContent = savedTitle;
-    const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
-    if (savedDesc   != null) descEl.textContent  = savedDesc;
-
-    // Save on blur or Enter
-    [ [titleEl, 'title'], [descEl, 'desc'] ].forEach(([el, kind]) => {
-      el.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          el.blur();
-        }
-      });
-      el.addEventListener('blur', () => {
-        const text = el.textContent.trim();
-        localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
-      });
-    });
-  });
-
-
 });
 
 let dragged = null;
@@ -406,9 +375,17 @@ function setupBoard() {
     reloadCardListeners(); // Make sure it's draggable
   });
   
-
   // INITIALIZE
   reloadCardListeners();
+
+  // Enable Editing
+  editCard();
+
+    // Enabled tag editing
+    editTag();
+
+    // Enable Status + Due date feature
+    initStatusBar();
 
 // SEARCH FUNCTIONALITY
 function performSearch() {
@@ -499,6 +476,7 @@ function reloadCardListeners() {
       }
       card.remove();
     };
+    
   });
 
   // Allow new cards to be draggable
@@ -512,4 +490,116 @@ function reloadCardListeners() {
       dragged = null;
     });
   });
+
+
 }
+
+// Edit Card Name + Description
+function editCard() {
+    //  Enable editing for NAME/Description
+    document.querySelectorAll('.todoList.panel').forEach((stackEl, stackIdx) => {
+      const titleEl = stackEl.querySelector('h2.todo-text');
+      const descEl  = stackEl.querySelector('p.panel-card-descr');
+  
+      // Turn on editing (in place)
+      titleEl.contentEditable = true;
+      descEl .contentEditable = true;
+  
+      // Load saved values
+      const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
+      if (savedTitle  != null) titleEl.textContent = savedTitle;
+      const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
+      if (savedDesc   != null) descEl.textContent  = savedDesc;
+  
+      // Save on blur or Enter
+      [ [titleEl, 'title'], [descEl, 'desc'] ].forEach(([el, kind]) => {
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            el.blur();
+          }
+        });
+        el.addEventListener('blur', () => {
+          const text = el.textContent.trim();
+          localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
+        });
+      });
+    });
+}
+
+function editTag() {
+  document.querySelectorAll('.card-wrapper').forEach(wrapper => {
+    const displayCard = wrapper.querySelector('.panel-card.card-id');
+    const textP       = displayCard.querySelector('.panel-card-text');
+    const inputCard   = wrapper.querySelector('.panel-card.input-card');
+    const inputEl     = inputCard.querySelector('input');
+    const saveBtn     = inputCard.querySelector('.save-button');
+    const editBtn     = displayCard.querySelector('.edit-button');
+
+    // 1) On edit button click, show the input and prefill it
+    editBtn.onclick = () => {
+      displayCard.style.display = 'none';      // hide the normal view
+      inputCard.style.display   = 'flex';      // show the input
+      inputEl.value             = textP.textContent;
+      inputEl.focus();
+    };
+
+    // 2) Enable Save only when there’s text
+    inputEl.oninput = () => {
+      saveBtn.disabled = inputEl.value.trim()==='';
+    };
+
+    // 3) On Save, write value everywhere and hide the input
+    saveBtn.onclick = () => {
+      const newName = inputEl.value.trim();
+      if (!newName) return;
+
+      // a) Update the DOM
+      textP.textContent = newName;
+      displayCard.style.display = 'flex';
+      inputCard.style.display   = 'none';
+
+      // b) Update your C++ TagManager (if you have a cardId on the wrapper):
+      const cardId = wrapper.dataset.cardId;
+      if (tagManager && cardId) {
+        // Remove the old tag then re-add with new name:
+        tagManager.removeTag(cardId, textP.textContent);
+        tagManager.addTag   (cardId, newName);
+      }
+
+      saveBtn.disabled = true;
+    };
+  });
+}
+
+
+function initStatusBar() {
+  document.querySelectorAll('.panel-card-footer').forEach(footer => {
+    // find the enclosing column and its index
+    const cardEl    = footer.closest('.todoList.panel');
+    const cardIdx   = Array.from(cardEl.parentNode.children).indexOf(cardEl);
+    const statusSel = footer.querySelector('.task-status');
+    const dueInput  = footer.querySelector('.task-due');
+
+    // Hydrate from storage
+    const savedStatus = localStorage.getItem(`card-${cardIdx}-status`);
+    if (savedStatus) statusSel.value = savedStatus;
+
+    const savedDue = localStorage.getItem(`card-${cardIdx}-due`);
+    if (savedDue) dueInput.value = savedDue;
+
+    // Persist changes
+    statusSel.addEventListener('change', () => {
+      localStorage.setItem(`card-${cardIdx}-status`, statusSel.value);
+      console.log(`Card ${cardIdx} status ->`, statusSel.value);
+      // Optionally: Module.Card.setStatus(...)
+    });
+    dueInput.addEventListener('change', () => {
+      localStorage.setItem(`card-${cardIdx}-due`, dueInput.value);
+      console.log(`Card ${cardIdx} due ->`, dueInput.value);
+      // Optionally: Module.Card.setDueDate(...)
+    });
+  });
+}
+
+
