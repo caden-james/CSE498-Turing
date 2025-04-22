@@ -263,6 +263,14 @@
     text-align: left;
     /* padding-bottom: .5em; */
     font-weight: 500;
+
+    width: 100%;
+    overflow-x: scroll;
+    /* max-width: 100px; */
+    line-break: strict;
+    /* overflow-y: initial; */
+    text-wrap: nowrap;
+}
   }
 
 
