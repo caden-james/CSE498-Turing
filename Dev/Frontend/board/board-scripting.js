@@ -278,7 +278,7 @@ function setupBoard() {
                             </div>
                             <label class="status-label">
                                 
-                              <select class="task-status">
+                              <select class="task-status unstarted">
                                 <option>Not Started</option>
                                 <option>In Progress</option>
                                 <option>Complete</option>
@@ -532,6 +532,17 @@ document.addEventListener("click", function(event) {
 
 // DELETE A CARD
 function reloadCardListeners() {
+  document.querySelectorAll(".panel-cards").forEach((panelCards) => {
+    panelCards.addEventListener("mouseover", () => {
+      const cardButtons = panelCards.querySelector(".card-buttons");
+      if (cardButtons) cardButtons.style.display = "flex";
+    });
+
+    panelCards.addEventListener("mouseout", () => {
+      const cardButtons = panelCards.querySelector(".card-buttons");
+      if (cardButtons) cardButtons.style.display = "none";
+    });
+  });
   document.querySelectorAll(".delete-button").forEach((button) => {
     button.onclick = (e) => {
       const card = e.target.closest(".card-wrapper");
