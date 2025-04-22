@@ -85,19 +85,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const cell = document.createElement("div");
+      const dateObj = new Date(year, month, day);
+      const formattedDate = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+    
       cell.textContent = day;
-
+      cell.classList.add("calendar-day");
+      cell.dataset.date = formattedDate;
+    
       const isToday =
         day === today.getDate() &&
         month === today.getMonth() &&
         year === today.getFullYear();
-
+    
       if (isToday) {
         cell.classList.add("today");
       }
-
+    
+      cell.addEventListener("click", () => {
+        document.querySelectorAll(".calendar-day").forEach(el => el.classList.remove("selected"));
+        cell.classList.add("selected");
+        loadNotesForDate(formattedDate);
+      });
+    
       calendar.appendChild(cell);
     }
+    
   }
 
   document.getElementById("prev-month").addEventListener("click", () => {
@@ -125,60 +137,28 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const notesArea = document.getElementById("notes-area");
   const saveStatus = document.getElementById("save-status");
-
-  // Load saved notes
-  const savedNotes = localStorage.getItem("sidebar-notes");
-  const savedTime = localStorage.getItem("notes-saved-time");
-
-  if (savedNotes) {
-    notesArea.value = savedNotes;
-    if (savedTime) {
-      saveStatus.textContent = `Last saved: ${savedTime}`;
-    }
-  }
-
-  // Save notes and timestamp
-  notesArea.addEventListener("input", () => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    localStorage.setItem("sidebar-notes", notesArea.value);
-    localStorage.setItem("notes-saved-time", timeString);
-
-    saveStatus.textContent = `Last saved: ${timeString}`;
-  });
-
-  const downloadBtn = document.getElementById("download-notes");
-
-downloadBtn.addEventListener("click", () => {
-  const notesText = notesArea.value || "No notes written yet.";
-  const blob = new Blob([notesText], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "my-notes.txt";
-  link.click();
-
-  URL.revokeObjectURL(url); // Clean up
-});
-
-});
-
-
-// CALENDAR DATE
-document.addEventListener("DOMContentLoaded", () => {
   const dateEl = document.getElementById("current-date");
-  const today = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  dateEl.textContent = today.toLocaleDateString(undefined, options);
+  const downloadBtn = document.getElementById("download-notes");
+  const calendar = document.getElementById("monthly-calendar");
+  const monthLabel = document.getElementById("month-label");
 
+  let selectedDate = new Date().toISOString().split("T")[0];
+  let today = new Date();
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
 
+  function loadNotesForDate(date) {
+    selectedDate = date;
+    const notesKey = `notes-${date}`;
+    const timeKey = `notes-time-${date}`;
+    const savedNotes = localStorage.getItem(notesKey);
+    const savedTime = localStorage.getItem(timeKey);
+
+    notesArea.value = savedNotes || "";
+    saveStatus.textContent = savedTime ? `Last saved: ${savedTime}` : "";
+  }
+
   function renderCalendar(month, year) {
-    const calendar = document.getElementById("monthly-calendar");
-    const monthLabel = document.getElementById("month-label");
     calendar.innerHTML = "";
 
     const firstDay = new Date(year, month, 1).getDay();
@@ -203,20 +183,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const cell = document.createElement("div");
+      const dateObj = new Date(year, month, day);
+      const formattedDate = dateObj.toISOString().split("T")[0];
+
       cell.textContent = day;
+      cell.classList.add("calendar-day");
+      cell.dataset.date = formattedDate;
 
-      const isToday =
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear();
+      const isToday = day === today.getDate() &&
+                      month === today.getMonth() &&
+                      year === today.getFullYear();
 
-      if (isToday) {
-        cell.classList.add("today");
+      if (isToday) cell.classList.add("today");
+
+      if (localStorage.getItem(`notes-${formattedDate}`)) {
+        cell.classList.add("has-notes"); // Add style if notes exist for that day
       }
+
+      cell.addEventListener("click", () => {
+        document.querySelectorAll(".calendar-day").forEach(el => el.classList.remove("selected"));
+        cell.classList.add("selected");
+        loadNotesForDate(formattedDate);
+      });
 
       calendar.appendChild(cell);
     }
   }
+
+  notesArea.addEventListener("input", () => {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    localStorage.setItem(`notes-${selectedDate}`, notesArea.value);
+    localStorage.setItem(`notes-time-${selectedDate}`, timeString);
+    saveStatus.textContent = `Last saved: ${timeString}`;
+
+    // Re-render to apply "has-notes" class
+    renderCalendar(currentMonth, currentYear);
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    const notesText = notesArea.value || "No notes written yet.";
+    const blob = new Blob([notesText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `notes-${selectedDate}.txt`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  });
 
   document.getElementById("prev-month").addEventListener("click", () => {
     currentMonth--;
@@ -236,52 +253,15 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCalendar(currentMonth, currentYear);
   });
 
+  // Show today's date and notes
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  dateEl.textContent = today.toLocaleDateString(undefined, options);
+
   renderCalendar(currentMonth, currentYear);
+  loadNotesForDate(selectedDate);
 });
 
-// SAVE NOTES LOCALLY
-document.addEventListener("DOMContentLoaded", () => {
-  const notesArea = document.getElementById("notes-area");
-  const saveStatus = document.getElementById("save-status");
 
-  // Load saved notes
-  const savedNotes = localStorage.getItem("sidebar-notes");
-  const savedTime = localStorage.getItem("notes-saved-time");
-
-  if (savedNotes) {
-    notesArea.value = savedNotes;
-    if (savedTime) {
-      saveStatus.textContent = `Last saved: ${savedTime}`;
-    }
-  }
-
-  // Save notes and timestamp
-  notesArea.addEventListener("input", () => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    localStorage.setItem("sidebar-notes", notesArea.value);
-    localStorage.setItem("notes-saved-time", timeString);
-
-    saveStatus.textContent = `Last saved: ${timeString}`;
-  });
-
-  const downloadBtn = document.getElementById("download-notes");
-
-downloadBtn.addEventListener("click", () => {
-  const notesText = notesArea.value || "No notes written yet.";
-  const blob = new Blob([notesText], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "my-notes.txt";
-  link.click();
-
-  URL.revokeObjectURL(url); // Clean up
-});
-
-});
 
 
 function setupBoard() {
