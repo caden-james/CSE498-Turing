@@ -361,9 +361,7 @@ function setupBoard() {
   
   // INITIALIZE
   reloadCardListeners();
-
-<<<<<<< HEAD
-=======
+  
   // Enable Editing
   editCard();
 
@@ -397,7 +395,7 @@ function performSearch() {
     
     if (typeof tagManager !== 'undefined') {
       try {
-        const tags = tagManager.getTags(cardId);
+        const tags = tagManager.getTags(String(cardId));
         for (let i = 0; i < tags.size(); i++) {
           if (tags.get(i).toLowerCase().includes(searchTerm)) {
             results.set(cardId, cardName);
@@ -436,7 +434,6 @@ function performSearch() {
   resultsContainer.style.display = results.size ? 'block' : 'none';
 }
 
->>>>>>> f6719423e7c043db64c2932fddf936d59fc72260
 // Set up event listeners
 document.querySelector(".search-button").addEventListener("click", performSearch);
 document.querySelector(".search-input").addEventListener("keypress", (e) => {
@@ -514,94 +511,6 @@ function reloadCardListeners() {
       dragged = null;
     });
   });
-<<<<<<< HEAD
-}
-
-// SEARCH FUNCTIONALITY
-function performSearch() {
-  const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
-  const resultsContainer = document.querySelector(".search-results");
-  
-  resultsContainer.innerHTML = '';
-  
-  if (!searchTerm) {
-    resultsContainer.style.display = 'none';
-    return;
-  }
-  
-  const results = new Map();
-  
-  document.querySelectorAll(".card-wrapper").forEach(card => {
-    const cardId = card.dataset.cardId;
-    const cardName = card.querySelector(".panel-card-text").textContent;
-    
-    if (cardName.toLowerCase().includes(searchTerm)) {
-      results.set(cardId, cardName);
-    }
-    
-    if (typeof tagManager !== 'undefined') {
-      try {
-        const tags = tagManager.getTags(String(cardId));
-        for (let i = 0; i < tags.size(); i++) {
-          if (tags.get(i).toLowerCase().includes(searchTerm)) {
-            results.set(cardId, cardName);
-            break;
-          }
-        }
-      } catch (e) {
-        console.error("Search error:", e);
-      }
-    }
-  });
-  
-  if (results.size > 0) {
-    results.forEach((name, id) => {
-      const resultItem = document.createElement("div");
-      resultItem.className = "search-result-item";
-      resultItem.textContent = name;
-      
-      resultItem.addEventListener("click", () => {
-        const card = document.querySelector(`[data-card-id="${id}"]`);
-        if (card == null)
-        {
-          return;
-        }
-        const cardElement = card.querySelector('.panel-card');
-        const textElement = card.querySelector('.panel-card-text');
-        
-        // Remove any existing highlights first
-        document.querySelectorAll('.highlighted, .highlighted-text').forEach(el => {
-            el.classList.remove('highlighted', 'highlighted-text');
-        });
-        
-        // Add highlight classes
-        cardElement.classList.add('highlighted');
-        textElement.classList.add('highlighted-text');
-        
-        card.scrollIntoView({behavior: "smooth", block: "center"});
-        resultsContainer.style.display = 'none';
-        
-        // Remove highlights after 2 seconds
-        setTimeout(() => {
-            cardElement.classList.remove('highlighted');
-            textElement.classList.remove('highlighted-text');
-        }, 2000);
-    });
-      
-      resultsContainer.appendChild(resultItem);
-    });
-  } else {
-    const noResults = document.createElement("div");
-    noResults.className = "search-result-item";
-    noResults.textContent = "No results found";
-    resultsContainer.appendChild(noResults);
-  }
-  
-  resultsContainer.style.display = results.size ? 'block' : 'none';
-}
-=======
-
-
 }
 
 // Edit Card Name + Description
@@ -713,4 +622,3 @@ function initStatusBar() {
 }
 
 
->>>>>>> f6719423e7c043db64c2932fddf936d59fc72260
