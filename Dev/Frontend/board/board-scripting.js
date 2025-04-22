@@ -59,11 +59,11 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
   titleEl.contentEditable = true;
   descEl.contentEditable = true;
 
-  // Load saved values
   const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
-  if (savedTitle  != null) titleEl.textContent = savedTitle;
   const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
-  if (savedDesc   != null) descEl.textContent  = savedDesc;
+
+  titleEl.textContent = savedTitle || "Card Name";
+  descEl.textContent  = savedDesc  || "Description";
 
   [[titleEl, 'title'], [descEl, 'desc']].forEach(([el, kind]) => {
     el.addEventListener('keydown', e => {
@@ -78,6 +78,7 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
     });
   });
 }
+
 
 let dragged = null;
 
