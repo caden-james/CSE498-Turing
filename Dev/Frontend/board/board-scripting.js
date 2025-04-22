@@ -253,19 +253,42 @@ function setupBoard() {
     newColumn.className = "todoList panel dropzone";
   
     newColumn.innerHTML = `
-      <h2 class="todo-text ignore">NAME</h2>
-      <p class="panel-card-descr">Description</p>
+      <div class="panel-card-footer">
+                            <h2 class="todo-text ignore" contenteditable="true">Card Name</h2>
+                           
+                            <label class="due-label">
+                          
+                              <input type="date" class="task-due on-track" />
+                            </label>
+                          </div>
+      <p class="panel-card-descr" contenteditable="true">Description</p>
   
       <div class="panel-cards"></div>
   
-      <div class="panel-card-add">
-        <div class="input" id="input-stack-${uniqueId}">
-          <input type="text" placeholder="Tag Name" class="input-create" />
-        </div>
-        <button class="add-button dynamic-add">
-          <span class="add-button-text">+ Add a Tag</span>
-        </button>
-      </div>
+      <div class="panel-card-footer status">
+                            <div class="panel-card-add">
+                                <div class="input input-stack">
+                                    <input type="text" class="input-create" maxlength="30" placeholder="Enter Stack title">
+                                    <button class="create-button disabled" disabled>Create Stack</button>
+                                </div>
+                                <button class="add-button dynamic-add">
+                                    <span class="add-button-text">
+                                        <span class="add-icon">+</span>
+                                    </span>
+                                    Add a Tag
+                                </button>
+                            </div>
+                            <label class="status-label">
+                                
+                              <select class="task-status unstarted">
+                                <option>Not Started</option>
+                                <option>In Progress</option>
+                                <option>Complete</option>
+                              </select>
+                            </label>
+                            
+                          </div>
+                    </div>
     `;
   
     const allStacks = document.querySelectorAll('.todoList.panel');
@@ -292,14 +315,19 @@ function setupBoard() {
       newCard.dataset.cardId = cardId;
   
       newCard.innerHTML = `
-        <div class="panel-card">
-          <p class="panel-card-text" contenteditable="true">${card.getContent()}</p>
-          <div class="card-buttons">
-            <button class="delete-button">
-              <img src="./icons/trash.png" alt="Delete" class="card-icon">
-            </button>
-          </div>
-        </div>
+        <div class="panel-card card-id highlighted">
+                                    <p class="panel-card-text highlighted-text">Tag Name</p>
+
+                                    <div class="card-buttons 2">
+                                        <button class="edit-button">
+                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
+                                        </button>
+                                        <button class="delete-button">
+                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
+                                        </button>
+                                        
+                                    </div>
+                                </div>
       `;
   
       panelCards.appendChild(newCard);
