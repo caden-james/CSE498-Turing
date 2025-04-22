@@ -347,69 +347,6 @@ function setupBoard() {
   // INITIALIZE
   reloadCardListeners();
 
-// SEARCH FUNCTIONALITY
-function performSearch() {
-  const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
-  const resultsContainer = document.querySelector(".search-results");
-  
-  resultsContainer.innerHTML = '';
-  
-  if (!searchTerm) {
-    resultsContainer.style.display = 'none';
-    return;
-  }
-  
-  const results = new Map();
-  
-  document.querySelectorAll(".card-wrapper").forEach(card => {
-    const cardId = card.dataset.cardId;
-    const cardName = card.querySelector(".panel-card-text").textContent;
-    
-    if (cardName.toLowerCase().includes(searchTerm)) {
-      results.set(cardId, cardName);
-    }
-    
-    if (typeof tagManager !== 'undefined') {
-      try {
-        const tags = tagManager.getTags(cardId);
-        for (let i = 0; i < tags.size(); i++) {
-          if (tags.get(i).toLowerCase().includes(searchTerm)) {
-            results.set(cardId, cardName);
-            break;
-          }
-        }
-      } catch (e) {
-        console.error("Search error:", e);
-      }
-    }
-  });
-  
-  if (results.size > 0) {
-    results.forEach((name, id) => {
-      const resultItem = document.createElement("div");
-      resultItem.className = "search-result-item";
-      resultItem.textContent = name;
-      
-      resultItem.addEventListener("click", () => {
-        const card = document.querySelector(`[data-card-id="${id}"]`);
-        card.scrollIntoView({behavior: "smooth", block: "center"});
-        card.style.outline = "2px solid #4285f4";
-        setTimeout(() => card.style.outline = "", 2000);
-        resultsContainer.style.display = 'none';
-      });
-      
-      resultsContainer.appendChild(resultItem);
-    });
-  } else {
-    const noResults = document.createElement("div");
-    noResults.className = "search-result-item";
-    noResults.textContent = "No results found";
-    resultsContainer.appendChild(noResults);
-  }
-  
-  resultsContainer.style.display = results.size ? 'block' : 'none';
-}
-
 // Set up event listeners
 document.querySelector(".search-button").addEventListener("click", performSearch);
 document.querySelector(".search-input").addEventListener("keypress", (e) => {
@@ -449,4 +386,87 @@ function reloadCardListeners() {
       dragged = null;
     });
   });
+}
+
+// SEARCH FUNCTIONALITY
+function performSearch() {
+  const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
+  const resultsContainer = document.querySelector(".search-results");
+  
+  resultsContainer.innerHTML = '';
+  
+  if (!searchTerm) {
+    resultsContainer.style.display = 'none';
+    return;
+  }
+  
+  const results = new Map();
+  
+  document.querySelectorAll(".card-wrapper").forEach(card => {
+    const cardId = card.dataset.cardId;
+    const cardName = card.querySelector(".panel-card-text").textContent;
+    
+    if (cardName.toLowerCase().includes(searchTerm)) {
+      results.set(cardId, cardName);
+    }
+    
+    if (typeof tagManager !== 'undefined') {
+      try {
+        const tags = tagManager.getTags(String(cardId));
+        for (let i = 0; i < tags.size(); i++) {
+          if (tags.get(i).toLowerCase().includes(searchTerm)) {
+            results.set(cardId, cardName);
+            break;
+          }
+        }
+      } catch (e) {
+        console.error("Search error:", e);
+      }
+    }
+  });
+  
+  if (results.size > 0) {
+    results.forEach((name, id) => {
+      const resultItem = document.createElement("div");
+      resultItem.className = "search-result-item";
+      resultItem.textContent = name;
+      
+      resultItem.addEventListener("click", () => {
+        const card = document.querySelector(`[data-card-id="${id}"]`);
+        if (card == null)
+        {
+          return;
+        }
+        const cardElement = card.querySelector('.panel-card');
+        const textElement = card.querySelector('.panel-card-text');
+        
+        // Remove any existing highlights first
+        document.querySelectorAll('.highlighted, .highlighted-text').forEach(el => {
+            el.classList.remove('highlighted', 'highlighted-text');
+        });
+        
+        // Add highlight classes
+        cardElement.classList.add('highlighted');
+        textElement.classList.add('highlighted-text');
+        
+        card.scrollIntoView({behavior: "smooth", block: "center"});
+        resultsContainer.style.display = 'none';
+        
+        // Remove highlights after 2 seconds
+        setTimeout(() => {
+            cardElement.classList.remove('highlighted');
+            textElement.classList.remove('highlighted-text');
+        }, 2000);
+    });
+      
+      resultsContainer.appendChild(resultItem);
+    });
+  } else {
+    const noResults = document.createElement("div");
+    noResults.className = "search-result-item";
+    noResults.textContent = "No results found";
+    resultsContainer.appendChild(noResults);
+  }
+  
+  resultsContainer.style.display = results.size ? 'block' : 'none';
 }
