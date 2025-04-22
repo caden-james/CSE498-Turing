@@ -258,7 +258,7 @@ function setupBoard() {
                            
                             <label class="due-label">
                           
-                              <input type="date" class="task-due on-track" />
+                              <input type="date" class="task-due" />
                             </label>
                           </div>
       <p class="panel-card-descr" contenteditable="true">Description</p>
