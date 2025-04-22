@@ -265,7 +265,8 @@
     font-weight: 500;
 
     width: 100%;
-    overflow-x: scroll;
+    overflow-x: visible;
+    white-space: normal;
     /* max-width: 100px; */
     line-break: strict;
     /* overflow-y: initial; */
