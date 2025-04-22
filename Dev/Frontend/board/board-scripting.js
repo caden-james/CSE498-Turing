@@ -213,8 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.loadNotesForDate = loadNotesForDate;
 });
 
-
-
 function setupBoard() {
   // DRAG & DROP HANDLERS
   document.querySelectorAll(".draggable").forEach((card) => {
@@ -253,42 +251,19 @@ function setupBoard() {
     newColumn.className = "todoList panel dropzone";
   
     newColumn.innerHTML = `
-      <div class="panel-card-footer">
-                            <h2 class="todo-text ignore" contenteditable="true">Card Name</h2>
-                           
-                            <label class="due-label">
-                          
-                              <input type="date" class="task-due" />
-                            </label>
-                          </div>
-      <p class="panel-card-descr" contenteditable="true">Description</p>
+      <h2 class="todo-text ignore">NAME</h2>
+      <p class="panel-card-descr">Description</p>
   
       <div class="panel-cards"></div>
   
-      <div class="panel-card-footer status">
-                            <div class="panel-card-add">
-                                <div class="input input-stack">
-                                    <input type="text" class="input-create" maxlength="30" placeholder="Enter Stack title">
-                                    <button class="create-button disabled" disabled>Create Stack</button>
-                                </div>
-                                <button class="add-button dynamic-add">
-                                    <span class="add-button-text">
-                                        <span class="add-icon">+</span>
-                                    </span>
-                                    Add a Tag
-                                </button>
-                            </div>
-                            <label class="status-label">
-                                
-                              <select class="task-status unstarted">
-                                <option>Not Started</option>
-                                <option>In Progress</option>
-                                <option>Complete</option>
-                              </select>
-                            </label>
-                            
-                          </div>
-                    </div>
+      <div class="panel-card-add">
+        <div class="input" id="input-stack-${uniqueId}">
+          <input type="text" placeholder="Tag Name" class="input-create" />
+        </div>
+        <button class="add-button dynamic-add">
+          <span class="add-button-text">+ Add a Tag</span>
+        </button>
+      </div>
     `;
   
     const allStacks = document.querySelectorAll('.todoList.panel');
@@ -315,19 +290,14 @@ function setupBoard() {
       newCard.dataset.cardId = cardId;
   
       newCard.innerHTML = `
-        <div class="panel-card card-id highlighted">
-                                    <p class="panel-card-text highlighted-text">Tag Name</p>
-
-                                    <div class="card-buttons 2">
-                                        <button class="edit-button">
-                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
-                                        </button>
-                                        <button class="delete-button">
-                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
-                                        </button>
-                                        
-                                    </div>
-                                </div>
+        <div class="panel-card">
+          <p class="panel-card-text" contenteditable="true">${card.getContent()}</p>
+          <div class="card-buttons">
+            <button class="delete-button">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
+            </button>
+          </div>
+        </div>
       `;
   
       panelCards.appendChild(newCard);
@@ -355,70 +325,54 @@ function setupBoard() {
     }
     
     const results = new Map();
-    let foundAnyResults = false;
     
-    // Search through all cards and their tags
     document.querySelectorAll(".card-wrapper").forEach(card => {
       const cardId = card.dataset.cardId;
       const cardName = card.querySelector(".panel-card-text").textContent;
       
-      // First check if the card name matches
       if (cardName.toLowerCase().includes(searchTerm)) {
-        foundAnyResults = true;
-        results.set(cardId, {
-          name: cardName,
-          isTag: false
-        });
+        results.set(cardId, cardName);
       }
       
-      // Then check tags if tagManager is available
       if (typeof tagManager !== 'undefined') {
         try {
-          const tags = tagManager.getTags(String(cardId));
+          const tags = tagManager.getTags(cardId);
           for (let i = 0; i < tags.size(); i++) {
-            const tag = tags.get(i).toLowerCase();
-            if (tag.includes(searchTerm)) {
-              foundAnyResults = true;
-              results.push({
-                id: cardId,
-                displayText: `${tags.get(i)} (Task: ${cardName})`
-              });
+            if (tags.get(i).toLowerCase().includes(searchTerm)) {
+              results.set(cardId, cardName);
+              break;
             }
           }
         } catch (e) {
-          console.error("Error searching tags:", e);
+          console.error("Search error:", e);
         }
       }
     });
     
-    // Handle display of results
-    if (!foundAnyResults) {
-      const noResults = document.createElement("div");
-      noResults.className = "search-result-item";
-      noResults.textContent = "No tags found";
-      resultsContainer.appendChild(noResults);
-    } else {
-      // Display results with tags first
-      results.forEach((item, id) => {
+    if (results.size > 0) {
+      results.forEach((name, id) => {
         const resultItem = document.createElement("div");
         resultItem.className = "search-result-item";
-        resultItem.textContent = item.name;
+        resultItem.textContent = name;
         
         resultItem.addEventListener("click", () => {
           const card = document.querySelector(`[data-card-id="${id}"]`);
-          if (card) {
-            card.scrollIntoView({behavior: "smooth", block: "center"});
-            card.style.outline = "2px solid #4285f4";
-            setTimeout(() => card.style.outline = "", 2000);
-          }
+          card.scrollIntoView({behavior: "smooth", block: "center"});
+          card.style.outline = "2px solid #4285f4";
+          setTimeout(() => card.style.outline = "", 2000);
           resultsContainer.style.display = 'none';
         });
         
         resultsContainer.appendChild(resultItem);
       });
+    } else {
+      const noResults = document.createElement("div");
+      noResults.className = "search-result-item";
+      noResults.textContent = "No results found";
+      resultsContainer.appendChild(noResults);
     }
     
-    resultsContainer.style.display = foundAnyResults ? 'block' : 'none';
+    resultsContainer.style.display = results.size ? 'block' : 'none';
   }
 
   // Set up event listeners
@@ -435,48 +389,6 @@ function setupBoard() {
       document.querySelector(".search-results").style.display = 'none';
     }
   });
-
-  let armedColumn = null;
-
-  document.addEventListener('dblclick', e => {
-    const col = e.target.closest('.todoList.panel');
-    if (!col) return;
-
-    document.querySelectorAll('.todoList.panel.armed')
-            .forEach(c => c.classList.remove('armed'));
-
-    col.classList.add('armed');
-    armedColumn = col;
-  });
-
-  const removeBtn = document.querySelectorAll('.top-bar .add-button')[1];
-  removeBtn.addEventListener('click', () => {
-    if (!armedColumn) {
-      alert('Double‑click the task you want to delete, then press “Remove a Task”.');
-      return;
-    }
-
-    armedColumn.querySelectorAll('.card-wrapper').forEach(w => {
-      const id = w.dataset.cardId;
-      if (tagManager && id) tagManager.clearTagsForTask(id);
-    });
-
-    armedColumn.remove();
-    armedColumn = null;
-  });
-
-  document.addEventListener('click', e => {
-    // if nothing is armed – nothing to do
-    if (!armedColumn) return;
-  
-    // if the click happened *inside* the armed column, keep it armed
-    if (e.target.closest('.todoList.panel.armed')) return;
-  
-    // otherwise remove the outline and forget the reference
-    armedColumn.classList.remove('armed');
-    armedColumn = null;
-  });
-
 }
 
 function setupAllDynamicAddButtons() {
@@ -515,6 +427,36 @@ function setupAllDynamicAddButtons() {
     });
   });
 }
+
+document.addEventListener("click", function(event) {
+  const editButton = event.target.closest(".edit-button");
+  if (!editButton) return;
+
+  const card = editButton.closest(".panel-card");
+  const textElement = card.querySelector(".panel-card-text");
+
+  const isEditable = textElement.isContentEditable;
+  textElement.contentEditable = !isEditable;
+
+  if (!isEditable) {
+    // Entering edit mode
+    textElement.focus();
+
+    const range = document.createRange();
+    range.selectNodeContents(textElement);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    editButton.querySelector("img").src = "./icons/check.png";
+  } 
+  
+  else {
+    // Exiting edit mode
+    textElement.blur();
+    editButton.querySelector("img").src = "./icons/edit.png";
+  }
+});
 
 // DELETE A CARD
 function reloadCardListeners() {
