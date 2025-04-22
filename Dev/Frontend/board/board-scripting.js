@@ -41,8 +41,10 @@ createModule().then((Module) => {
   console.log("Annotation label test:", wrapper.getAnnotation("label"));
 
   // starts the rest of the app logic
+  loadBoardState();
   setupBoard();
   setupAllDynamicAddButtons();
+
 
   //  Enable editing for NAME/Description
   document.querySelectorAll('.todoList.panel').forEach((stackEl, stackIdx) => {
@@ -58,7 +60,6 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
 
   titleEl.contentEditable = true;
   descEl.contentEditable = true;
-
   const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
   const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
 
@@ -77,8 +78,12 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
       localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
     });
   });
-}
+  saveBoardState();
+  loadBoardState();
 
+  localStorage.removeItem(`stack-${stackIdx}-title`)
+  localStorage.removeItem(`stack-${stackIdx}-desc`)
+}
 
 let dragged = null;
 
@@ -246,7 +251,6 @@ function setupBoard() {
   // CREATE A NEW CARD
   document.querySelector(".top-bar .add-button").addEventListener("click", () => {
     const slider = document.getElementById("slider");
-    const uniqueId = `task-${Date.now()}`;
   
     const newColumn = document.createElement("div");
     newColumn.className = "todoList panel dropzone";
@@ -448,7 +452,11 @@ function setupBoard() {
     if (removeBtn.contains(e.target)) return;
     armedColumn.classList.remove('armed');
     armedColumn = null;
+
   });
+
+  saveBoardState();
+  loadBoardState();
 }
 
 function setupAllDynamicAddButtons() {
@@ -566,3 +574,113 @@ function reloadCardListeners() {
     });
   });
 }
+
+
+// STORING CARDS
+function saveBoardState() {
+  const columns = document.querySelectorAll(".todoList.panel");
+  const boardData = [];
+
+  columns.forEach((col) => {
+    const columnTitle = col.querySelector(".todo-text")?.textContent || "Untitled";
+    const dueDate = col.querySelector(".task-due")?.value || "";
+    const status = col.querySelector(".task-status")?.value || "Not Started";
+
+    const cards = Array.from(col.querySelectorAll(".card-wrapper")).map(card => ({
+      id: card.dataset.cardId,
+      content: card.querySelector(".panel-card-text")?.textContent || "Untitled"
+    }));
+
+    boardData.push({
+      title: columnTitle,
+      dueDate,
+      status,
+      cards
+    });
+  });
+
+  localStorage.setItem("boardState", JSON.stringify(boardData));
+}
+
+function loadBoardState() {
+  const saved = localStorage.getItem("boardState");
+  if (!saved) return;
+
+  const boardData = JSON.parse(saved);
+  const slider = document.getElementById("slider");
+  slider.innerHTML = ""; // Clear existing content
+
+  boardData.forEach(colData => {
+    const newColumn = document.createElement("div");
+    newColumn.className = "todoList panel dropzone";
+
+    newColumn.innerHTML = `
+      <div class="panel-card-footer">
+        <h2 class="todo-text ignore" contenteditable="true">${colData.title}</h2>
+        <label class="due-label">
+          <input type="date" class="task-due" value="${colData.dueDate}" />
+        </label>
+      </div>
+      <p class="panel-card-descr" contenteditable="true">Description</p>
+      <div class="panel-cards"></div>
+      <div class="panel-card-footer status">
+        <div class="panel-card-add">
+          <div class="input input-stack">
+            <input type="text" class="input-create" maxlength="30" placeholder="Enter Stack title">
+            <button class="create-button disabled" disabled>Create Stack</button>
+          </div>
+          <button class="add-button dynamic-add">
+            <span class="add-button-text"><span class="add-icon">+</span></span>
+            Add a Tag
+          </button>
+        </div>
+        <label class="status-label">
+          <select class="task-status">
+            <option ${colData.status === "Not Started" ? "selected" : ""}>Not Started</option>
+            <option ${colData.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option ${colData.status === "Complete" ? "selected" : ""}>Complete</option>
+          </select>
+        </label>
+      </div>
+    `;
+
+    const panelCards = newColumn.querySelector(".panel-cards");
+
+    colData.cards.forEach(card => {
+      const newCard = document.createElement("div");
+      newCard.className = "card-wrapper draggable";
+      newCard.draggable = true;
+      newCard.dataset.cardId = card.id;
+
+      newCard.innerHTML = `
+        <div class="panel-card card-id">
+          <p class="panel-card-text">${card.content}</p>
+          <div class="card-buttons 2">
+            <button class="edit-button">
+              <img src="./icons/edit.png" alt="Edit" class="card-icon">
+            </button>
+            <button class="delete-button">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
+            </button>
+          </div>
+        </div>
+      `;
+
+      panelCards.appendChild(newCard);
+    });
+
+    slider.appendChild(newColumn);
+  });
+
+  reloadCardListeners();
+  setupAllDynamicAddButtons();
+}
+
+
+document.addEventListener("input", saveBoardState);
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".add-button") || e.target.closest(".delete-button") || e.target.closest(".edit-button")) {
+    setTimeout(saveBoardState, 100); 
+  }
+});
+
