@@ -355,54 +355,70 @@ function setupBoard() {
     }
     
     const results = new Map();
+    let foundAnyResults = false;
     
+    // Search through all cards and their tags
     document.querySelectorAll(".card-wrapper").forEach(card => {
       const cardId = card.dataset.cardId;
       const cardName = card.querySelector(".panel-card-text").textContent;
       
+      // First check if the card name matches
       if (cardName.toLowerCase().includes(searchTerm)) {
-        results.set(cardId, cardName);
+        foundAnyResults = true;
+        results.set(cardId, {
+          name: cardName,
+          isTag: false
+        });
       }
       
+      // Then check tags if tagManager is available
       if (typeof tagManager !== 'undefined') {
         try {
-          const tags = tagManager.getTags(cardId);
+          const tags = tagManager.getTags(String(cardId));
           for (let i = 0; i < tags.size(); i++) {
-            if (tags.get(i).toLowerCase().includes(searchTerm)) {
-              results.set(cardId, cardName);
-              break;
+            const tag = tags.get(i).toLowerCase();
+            if (tag.includes(searchTerm)) {
+              foundAnyResults = true;
+              results.push({
+                id: cardId,
+                displayText: `${tags.get(i)} (Task: ${cardName})`
+              });
             }
           }
         } catch (e) {
-          console.error("Search error:", e);
+          console.error("Error searching tags:", e);
         }
       }
     });
     
-    if (results.size > 0) {
-      results.forEach((name, id) => {
+    // Handle display of results
+    if (!foundAnyResults) {
+      const noResults = document.createElement("div");
+      noResults.className = "search-result-item";
+      noResults.textContent = "No tags found";
+      resultsContainer.appendChild(noResults);
+    } else {
+      // Display results with tags first
+      results.forEach((item, id) => {
         const resultItem = document.createElement("div");
         resultItem.className = "search-result-item";
-        resultItem.textContent = name;
+        resultItem.textContent = item.name;
         
         resultItem.addEventListener("click", () => {
           const card = document.querySelector(`[data-card-id="${id}"]`);
-          card.scrollIntoView({behavior: "smooth", block: "center"});
-          card.style.outline = "2px solid #4285f4";
-          setTimeout(() => card.style.outline = "", 2000);
+          if (card) {
+            card.scrollIntoView({behavior: "smooth", block: "center"});
+            card.style.outline = "2px solid #4285f4";
+            setTimeout(() => card.style.outline = "", 2000);
+          }
           resultsContainer.style.display = 'none';
         });
         
         resultsContainer.appendChild(resultItem);
       });
-    } else {
-      const noResults = document.createElement("div");
-      noResults.className = "search-result-item";
-      noResults.textContent = "No results found";
-      resultsContainer.appendChild(noResults);
     }
     
-    resultsContainer.style.display = results.size ? 'block' : 'none';
+    resultsContainer.style.display = foundAnyResults ? 'block' : 'none';
   }
 
   // Set up event listeners
