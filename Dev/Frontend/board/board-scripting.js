@@ -419,6 +419,36 @@ function setupBoard() {
       document.querySelector(".search-results").style.display = 'none';
     }
   });
+
+  let armedColumn = null;
+
+  document.addEventListener('dblclick', e => {
+    const col = e.target.closest('.todoList.panel');
+    if (!col) return;
+
+    document.querySelectorAll('.todoList.panel.armed')
+            .forEach(c => c.classList.remove('armed'));
+
+    col.classList.add('armed');
+    armedColumn = col;
+  });
+
+  const removeBtn = document.querySelectorAll('.top-bar .add-button')[1];
+  removeBtn.addEventListener('click', () => {
+    if (!armedColumn) {
+      alert('Double‑click the task you want to delete, then press “Remove a Task”.');
+      return;
+    }
+
+    armedColumn.querySelectorAll('.card-wrapper').forEach(w => {
+      const id = w.dataset.cardId;
+      if (tagManager && id) tagManager.clearTagsForTask(id);
+    });
+
+    armedColumn.remove();
+    armedColumn = null;
+  });
+
 }
 
 function setupAllDynamicAddButtons() {
