@@ -253,17 +253,18 @@ function setupBoard() {
     newColumn.className = "todoList panel dropzone";
   
     newColumn.innerHTML = `
-      <div class="panel-card-footer">
-                            <h2 class="todo-text ignore" contenteditable="true">Card Name</h2>
+
+                        
+                        <div class="panel-card-footer">
+                            <h2 class="todo-text" contenteditable="true">Card Name</h2>
                            
                             <label class="due-label">
-                          
                               <input type="date" class="task-due" />
                             </label>
                           </div>
-      <p class="panel-card-descr" contenteditable="true">Description</p>
-  
-      <div class="panel-cards"></div>
+                        <p class="panel-card-descr" contenteditable="true">Description</p>
+
+      <div class="panel-cards" onmouseover="this.querySelector('.card-buttons').style.display='flex'" onmouseout="this.querySelector('.card-buttons').style.display='none'></div>
   
       <div class="panel-card-footer status">
                             <div class="panel-card-add">
@@ -275,12 +276,12 @@ function setupBoard() {
                                     <span class="add-button-text">
                                         <span class="add-icon">+</span>
                                     </span>
-                                    Add a Tag
+                                    Add a Taggdfxchvjbk
                                 </button>
                             </div>
                             <label class="status-label">
                                 
-                              <select class="task-status unstarted">
+                              <select class="task-status">
                                 <option>Not Started</option>
                                 <option>In Progress</option>
                                 <option>Complete</option>
@@ -288,7 +289,7 @@ function setupBoard() {
                             </label>
                             
                           </div>
-                    </div>
+          
     `;
   
     const allStacks = document.querySelectorAll('.todoList.panel');
@@ -315,9 +316,9 @@ function setupBoard() {
       newCard.dataset.cardId = cardId;
   
       newCard.innerHTML = `
-        <div class="panel-card card-id highlighted">
-                                    <p class="panel-card-text highlighted-text">Tag Name</p>
-
+       <div class="card-wrapper draggable" draggable="true">
+                                <div class="panel-card card-id">
+                                    <p class="panel-card-text">Tag Name</p>
                                     <div class="card-buttons 2">
                                         <button class="edit-button">
                                             <img src="./icons/edit.png" alt="Edit" class="card-icon">
@@ -325,9 +326,16 @@ function setupBoard() {
                                         <button class="delete-button">
                                             <img src="./icons/trash.png" alt="Delete" class="card-icon">
                                         </button>
-                                        
+                                       
                                     </div>
                                 </div>
+                                <div class="panel-card input-card">
+                                    <input maxlength="25" class="panel-card-text">
+                                    <div class="edit-buttons">
+                                        <button class="save-button" disabled>Save</button>
+                                    </div>
+                                </div>
+                            </div>
       `;
   
       panelCards.appendChild(newCard);
@@ -457,14 +465,27 @@ function setupAllDynamicAddButtons() {
       newCard.dataset.cardId = cardId;
 
       newCard.innerHTML = `
-        <div class="panel-card">
-          <p class="panel-card-text" contenteditable="true">${card.getContent()}</p>
-          <div class="card-buttons">
-            <button class="delete-button">
-              <img src="./icons/trash.png" alt="Delete" class="card-icon">
-            </button>
-          </div>
-        </div>
+        <div class="card-wrapper draggable" draggable="true">
+                                <div class="panel-card card-id">
+                                    <p class="panel-card-text">${card.getContent()}</p>
+                                    <div class="card-buttons 2">
+                                        <button class="edit-button">
+                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
+                                        </button>
+                                        <button class="delete-button">
+                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
+                                        </button>
+                                       
+                                    </div>
+                                </div>
+                                <div class="panel-card input-card">
+                                    <input maxlength="25" class="panel-card-text">
+                                    <div class="edit-buttons">
+                                        <button class="save-button" disabled>Save</button>
+                                    </div>
+                                </div>
+                            </div>
+        
       `;
 
       panelCards.appendChild(newCard);
