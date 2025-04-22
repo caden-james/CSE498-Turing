@@ -42,6 +42,7 @@ createModule().then((Module) => {
 
   // starts the rest of the app logic
   setupBoard();
+  setupAllDynamicAddButtons();
 
 });
 
@@ -313,7 +314,7 @@ function setupBoard() {
   });
 
   // CREATE A NEW CARD
-  document.querySelector(".add-button").addEventListener("click", () => {
+  document.querySelector(".top-bar .add-button").addEventListener("click", () => {
     const slider = document.getElementById("slider");
     const uniqueId = `task-${Date.now()}`;
   
@@ -336,7 +337,10 @@ function setupBoard() {
       </div>
     `;
   
+    const allStacks = document.querySelectorAll('.todoList.panel');
+    const newStackIndex = allStacks.length;
     slider.appendChild(newColumn);
+    enableEditableTitleAndDesc(newColumn, newStackIndex);
   
     // manually re-bind dynamic-add to this specific column
     const input = newColumn.querySelector(".input-create");
@@ -464,6 +468,43 @@ document.addEventListener("click", (e) => {
     document.querySelector(".search-results").style.display = 'none';
   }
 });
+}
+
+function setupAllDynamicAddButtons() {
+  document.querySelectorAll(".dynamic-add").forEach(button => {
+    const column = button.closest(".todoList");
+    const input = column.querySelector(".input-create");
+    const panelCards = column.querySelector(".panel-cards");
+
+    button.addEventListener("click", () => {
+      const cardName = input.value.trim() || "New Tag";
+      const cardId = Date.now();
+
+      const card = new Card(cardId % 2147483647, cardName);
+      board.addCard(card);
+      card.addTag(cardName);
+
+      const newCard = document.createElement("div");
+      newCard.className = "card-wrapper draggable";
+      newCard.draggable = true;
+      newCard.dataset.cardId = cardId;
+
+      newCard.innerHTML = `
+        <div class="panel-card">
+          <p class="panel-card-text" contenteditable="true">${card.getContent()}</p>
+          <div class="card-buttons">
+            <button class="delete-button">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
+            </button>
+          </div>
+        </div>
+      `;
+
+      panelCards.appendChild(newCard);
+      input.value = "";
+      reloadCardListeners();
+    });
+  });
 }
 
 // DELETE A CARD
