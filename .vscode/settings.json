@@ -91,7 +91,8 @@
         "__bit_reference": "cpp",
         "__locale": "cpp",
         "__node_handle": "cpp",
-        "__verbose_abort": "cpp"
+        "__verbose_abort": "cpp",
+        "unordered_set": "cpp"
     },
     "liveServer.settings.port": 5501
 }
