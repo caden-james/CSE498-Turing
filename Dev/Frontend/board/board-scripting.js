@@ -389,6 +389,38 @@ function setupBoard() {
       document.querySelector(".search-results").style.display = 'none';
     }
   });
+
+  let armedColumn = null;
+
+  document.addEventListener('dblclick', e => {
+    const col = e.target.closest('.todoList.panel');
+    if (!col) return;
+
+    // remove outline from any previously armed column
+    document.querySelectorAll('.todoList.panel.armed')
+            .forEach(c => c.classList.remove('armed'));
+
+    col.classList.add('armed');
+    armedColumn = col;
+  });
+
+  const removeBtn = document.querySelectorAll('.top-bar .add-button')[1];
+  removeBtn.addEventListener('click', () => {
+    if (!armedColumn) {
+      alert('Double‑click the task you want to delete, then press “Remove a Task”.');
+      return;
+    }
+    armedColumn.remove();
+    armedColumn = null;
+  });
+
+  document.addEventListener('click', e => {
+    if (!armedColumn) return;
+    if (e.target.closest('.todoList.panel.armed')) return;
+    if (removeBtn.contains(e.target)) return;
+    armedColumn.classList.remove('armed');
+    armedColumn = null;
+  });
 }
 
 function setupAllDynamicAddButtons() {
