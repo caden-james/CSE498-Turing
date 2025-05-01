@@ -43,7 +43,6 @@ createModule().then((Module) => {
   // starts the rest of the app logic
   loadBoardState();
   setupBoard();
-  setupAllDynamicAddButtons();
 
 
   //  Enable editing for NAME/Description
@@ -62,17 +61,29 @@ function sanitizeInput(text) {
 
 function enableEditableTitleAndDesc(stackEl, stackIdx) {
   const titleEl = stackEl.querySelector('h2.todo-text');
-  const descEl  = stackEl.querySelector('p.panel-card-descr');
+  const descEl = stackEl.querySelector('p.panel-card-descr');
 
   titleEl.contentEditable = true;
   descEl.contentEditable = true;
   const savedTitle = localStorage.getItem(`stack-${stackIdx}-title`);
-  const savedDesc  = localStorage.getItem(`stack-${stackIdx}-desc`);
+  const savedDesc = localStorage.getItem(`stack-${stackIdx}-desc`);
 
-  titleEl.textContent = savedTitle || "Card Name";
-  descEl.textContent  = savedDesc  || "Description";
+  if (savedTitle) titleEl.textContent = savedTitle;
+  if (savedDesc) descEl.textContent = savedDesc;
 
-  [[titleEl, 'title'], [descEl, 'desc']].forEach(([el, kind]) => {
+  titleEl.addEventListener('blur', () => {
+    const text = titleEl.textContent.trim();
+    localStorage.setItem(`stack-${stackIdx}-title`, text);
+    saveBoardState();
+  });
+
+  descEl.addEventListener('blur', () => {
+    const text = descEl.textContent.trim();
+    localStorage.setItem(`stack-${stackIdx}-desc`, text);
+    saveBoardState();
+  });
+
+  [titleEl, descEl].forEach(el => {
     el.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -86,11 +97,6 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
       localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
     });
   });
-  saveBoardState();
-  loadBoardState();
-
-  localStorage.removeItem(`stack-${stackIdx}-title`)
-  localStorage.removeItem(`stack-${stackIdx}-desc`)
 }
 
 let dragged = null;
@@ -227,6 +233,12 @@ document.addEventListener("DOMContentLoaded", () => {
   window.loadNotesForDate = loadNotesForDate;
 });
 
+// helps prevent duplicate listeners
+function addEventListenerOnce(element, event, handler) {
+  element.removeEventListener(event, handler);
+  element.addEventListener(event, handler);
+}
+
 function setupBoard() {
   // DRAG & DROP HANDLERS
   document.querySelectorAll(".draggable").forEach((card) => {
@@ -265,7 +277,7 @@ function setupBoard() {
   
     newColumn.innerHTML = `
       <div class="panel-card-footer">
-                            <h2 class="todo-text ignore" contenteditable="true">Card Name</h2>
+                            <h2 class="todo-text" contenteditable="true">Card Name</h2>
                            
                             <label class="due-label">
                           
@@ -318,6 +330,10 @@ function setupBoard() {
       const card = new Card(cardId % 2147483647, cardName);
       board.addCard(card);
       card.addTag(cardName);
+
+      if (tagManager) {
+        tagManager.addTag(String(cardId), String(cardName));
+      }
   
       const newCard = document.createElement("div");
       newCard.className = "card-wrapper draggable";
@@ -357,30 +373,36 @@ function setupBoard() {
     const searchTerm = document.querySelector(".search-input").value.trim().toLowerCase();
     const resultsContainer = document.querySelector(".search-results");
     
+    // Clear previous highlights and results
+    document.querySelectorAll(".card-wrapper").forEach(card => {
+      card.style.outline = "";
+    });
     resultsContainer.innerHTML = '';
     
     if (!searchTerm) {
       resultsContainer.style.display = 'none';
       return;
     }
-    
-    const results = new Map();
+  
+    const tagMap = new Map();
     
     document.querySelectorAll(".card-wrapper").forEach(card => {
       const cardId = card.dataset.cardId;
-      const cardName = card.querySelector(".panel-card-text").textContent;
+      const cardText = card.querySelector(".panel-card-text")?.textContent || "";
       
-      if (cardName.toLowerCase().includes(searchTerm)) {
-        results.set(cardId, cardName);
+      // Always include the card's text as a tag
+      if (!tagMap.has(cardText)) {
+        tagMap.set(cardText, []);
       }
+      tagMap.get(cardText).push(cardId);
       
       if (typeof tagManager !== 'undefined') {
         try {
           const tags = tagManager.getTags(cardId);
           for (let i = 0; i < tags.size(); i++) {
-            if (tags.get(i).toLowerCase().includes(searchTerm)) {
-              results.set(cardId, cardName);
-              break;
+            const tagName = tags.get(i);
+            if (!tagMap.has(tagName)) {
+              tagMap.set(tagName, []);
             }
           }
         } catch (e) {
@@ -388,41 +410,55 @@ function setupBoard() {
         }
       }
     });
-    
-    if (results.size > 0) {
-      results.forEach((name, id) => {
+  
+    // Filter tags that match search (case insensitive)
+    const matchingTags = Array.from(tagMap.entries())
+      .filter(([tagName]) => tagName.toLowerCase().includes(searchTerm));
+  
+    if (matchingTags.length > 0) {
+      matchingTags.forEach(([tagName, cardIds]) => {
         const resultItem = document.createElement("div");
         resultItem.className = "search-result-item";
-        resultItem.textContent = name;
+        resultItem.textContent = `${tagName} (${cardIds.length})`;
         
         resultItem.addEventListener("click", () => {
-          const card = document.querySelector(`[data-card-id="${id}"]`);
-          card.scrollIntoView({behavior: "smooth", block: "center"});
-          card.style.outline = "2px solid #4285f4";
-          setTimeout(() => card.style.outline = "", 2000);
-          resultsContainer.style.display = 'none';
+          // Highlight all cards with this tag
+          document.querySelectorAll(".card-wrapper").forEach(card => {
+            card.style.outline = "";
+          });
+          
+          cardIds.forEach(id => {
+            const card = document.querySelector(`[data-card-id="${id}"]`);
+            if (card) {
+              card.style.outline = "2px solid #4285f4";
+            }
+          });
         });
         
         resultsContainer.appendChild(resultItem);
       });
+      resultsContainer.style.display = 'block';
     } else {
       const noResults = document.createElement("div");
       noResults.className = "search-result-item";
-      noResults.textContent = "No results found";
+      noResults.textContent = "No tags found.";
       resultsContainer.appendChild(noResults);
+      resultsContainer.style.display = 'block';
     }
-    
-    resultsContainer.style.display = results.size ? 'block' : 'none';
   }
-
-  // Set up event listeners
-  document.querySelector(".search-button").addEventListener("click", performSearch);
-  document.querySelector(".search-input").addEventListener("keypress", (e) => {
+  
+  // Update search input event listeners
+  document.querySelector(".search-input").addEventListener("input", performSearch);
+  
+  // Add Enter key support
+  document.querySelector(".search-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       performSearch();
     }
   });
-
+  
+  document.querySelector(".search-button").addEventListener("click", performSearch);
+  
   // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".search-container")) {
@@ -467,56 +503,6 @@ function setupBoard() {
   loadBoardState();
 }
 
-function setupAllDynamicAddButtons() {
-  document.querySelectorAll(".dynamic-add").forEach(button => {
-    const column = button.closest(".todoList");
-    const input = column.querySelector(".input-create");
-    const panelCards = column.querySelector(".panel-cards");
-
-    button.addEventListener("click", () => {
-      const cardName = input.value.trim() || "New Tag";
-      const cardId = Date.now();
-
-      const card = new Card(cardId % 2147483647, cardName);
-      board.addCard(card);
-      card.addTag(cardName);
-
-      const newCard = document.createElement("div");
-      newCard.className = "card-wrapper draggable";
-      newCard.draggable = true;
-      newCard.dataset.cardId = cardId;
-
-      newCard.innerHTML = `
-        <div class="card-wrapper draggable" draggable="true">
-                                <div class="panel-card card-id">
-                                    <p class="panel-card-text">${card.getContent()}</p>
-                                    <div class="card-buttons 2">
-                                        <button class="edit-button">
-                                            <img src="./icons/edit.png" alt="Edit" class="card-icon">
-                                        </button>
-                                        <button class="delete-button">
-                                            <img src="./icons/trash.png" alt="Delete" class="card-icon">
-                                        </button>
-                                       
-                                    </div>
-                                </div>
-                                <div class="panel-card input-card">
-                                    <input maxlength="25" class="panel-card-text">
-                                    <div class="edit-buttons">
-                                        <button class="save-button" disabled>Save</button>
-                                    </div>
-                                </div>
-                            </div>
-        
-      `;
-
-      panelCards.appendChild(newCard);
-      input.value = "";
-      reloadCardListeners();
-    });
-  });
-}
-
 document.addEventListener("click", function(event) {
   const editButton = event.target.closest(".edit-button");
   if (!editButton) return;
@@ -549,17 +535,16 @@ document.addEventListener("click", function(event) {
 
 // DELETE A CARD
 function reloadCardListeners() {
-  document.querySelectorAll(".panel-cards").forEach((panelCards) => {
-    panelCards.addEventListener("mouseover", () => {
-      const cardButtons = panelCards.querySelector(".card-buttons");
-      if (cardButtons) cardButtons.style.display = "flex";
-    });
-
-    panelCards.addEventListener("mouseout", () => {
-      const cardButtons = panelCards.querySelector(".card-buttons");
-      if (cardButtons) cardButtons.style.display = "none";
-    });
+  document.querySelectorAll(".card-wrapper").forEach((card) => {
+    // Remove any existing listeners to prevent duplicates
+    card.removeEventListener("mouseenter", showCardButtons);
+    card.removeEventListener("mouseleave", hideCardButtons);
+    
+    // Add new listeners
+    card.addEventListener("mouseenter", showCardButtons);
+    card.addEventListener("mouseleave", hideCardButtons);
   });
+
   document.querySelectorAll(".delete-button").forEach((button) => {
     button.onclick = (e) => {
       const card = e.target.closest(".card-wrapper");
@@ -567,6 +552,7 @@ function reloadCardListeners() {
         tagManager.clearTagsForTask(card.dataset.cardId);
       }
       card.remove();
+      saveBoardState();
     };
   });
 
@@ -581,6 +567,20 @@ function reloadCardListeners() {
       dragged = null;
     });
   });
+}
+
+
+// helper functions
+function showCardButtons(e) {
+  const card = e.currentTarget;
+  const buttons = card.querySelector(".card-buttons");
+  if (buttons) buttons.style.display = "flex";
+}
+
+function hideCardButtons(e) {
+  const card = e.currentTarget;
+  const buttons = card.querySelector(".card-buttons");
+  if (buttons) buttons.style.display = "none";
 }
 
 
@@ -616,15 +616,15 @@ function loadBoardState() {
 
   const boardData = JSON.parse(saved);
   const slider = document.getElementById("slider");
-  slider.innerHTML = ""; // Clear existing content
+  slider.innerHTML = "";
 
-  boardData.forEach(colData => {
+  boardData.forEach((colData, colIndex) => {
     const newColumn = document.createElement("div");
     newColumn.className = "todoList panel dropzone";
 
     newColumn.innerHTML = `
       <div class="panel-card-footer">
-        <h2 class="todo-text ignore" contenteditable="true">${colData.title}</h2>
+        <h2 class="todo-text" contenteditable="true">${colData.title}</h2>
         <label class="due-label">
           <input type="date" class="task-due" value="${colData.dueDate}" />
         </label>
@@ -660,6 +660,10 @@ function loadBoardState() {
       newCard.draggable = true;
       newCard.dataset.cardId = card.id;
 
+      if (tagManager) {
+        tagManager.addTag(card.id, card.content);
+      }
+
       newCard.innerHTML = `
         <div class="panel-card card-id">
           <p class="panel-card-text">${card.content}</p>
@@ -678,10 +682,54 @@ function loadBoardState() {
     });
 
     slider.appendChild(newColumn);
+    enableEditableTitleAndDesc(newColumn, colIndex);
+  });
+
+  document.querySelectorAll(".dynamic-add").forEach(button => {
+    button.addEventListener("click", function() {
+      const column = this.closest(".todoList");
+      const input = column.querySelector(".input-create");
+      const panelCards = column.querySelector(".panel-cards");
+
+      const cardName = input.value.trim() || "New Tag";
+      const cardId = Date.now();
+
+      const card = new Card(cardId % 2147483647, cardName);
+      board.addCard(card);
+      card.addTag(cardName);
+
+      if (tagManager) {
+        tagManager.addTag(String(cardId), String(cardName));
+      }
+
+      const newCard = document.createElement("div");
+      newCard.className = "card-wrapper draggable";
+      newCard.draggable = true;
+      newCard.dataset.cardId = cardId;
+
+      newCard.innerHTML = `
+        <div class="panel-card card-id">
+          <p class="panel-card-text">${cardName}</p>
+          <div class="card-buttons 2">
+            <button class="edit-button">
+              <img src="./icons/edit.png" alt="Edit" class="card-icon">
+            </button>
+            <button class="delete-button">
+              <img src="./icons/trash.png" alt="Delete" class="card-icon">
+            </button>
+          </div>
+        </div>
+      `;
+
+      panelCards.appendChild(newCard);
+      input.value = "";
+      reloadCardListeners();
+
+      document.querySelector(".search-input").dispatchEvent(new Event('input'));
+    });
   });
 
   reloadCardListeners();
-  setupAllDynamicAddButtons();
 }
 
 
@@ -691,4 +739,3 @@ document.addEventListener("click", (e) => {
     setTimeout(saveBoardState, 100); 
   }
 });
-
