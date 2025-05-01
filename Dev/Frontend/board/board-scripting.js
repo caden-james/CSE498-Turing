@@ -54,6 +54,12 @@ createModule().then((Module) => {
 
 });
 
+function sanitizeInput(text) {
+  const div = document.createElement('div');
+  div.textContent = text; // Escapes all tags
+  return div.innerHTML;
+}
+
 function enableEditableTitleAndDesc(stackEl, stackIdx) {
   const titleEl = stackEl.querySelector('h2.todo-text');
   const descEl  = stackEl.querySelector('p.panel-card-descr');
@@ -75,6 +81,8 @@ function enableEditableTitleAndDesc(stackEl, stackIdx) {
     });
     el.addEventListener('blur', () => {
       const text = el.textContent.trim();
+      const safeText = sanitizeInput(text);
+      el.innerText = safeText;
       localStorage.setItem(`stack-${stackIdx}-${kind}`, text);
     });
   });

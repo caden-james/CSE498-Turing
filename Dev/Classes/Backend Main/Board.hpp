@@ -26,12 +26,12 @@ class Board {
             return cards.remove(card);
         }
     
-        // Grab a card based off index, we would have to grab one if we are doing a search ?
+        // Grab a card based off index, index is attached to each card when created
         Card getCard(size_t index) const {
             return cards.get(index);
         }
         
-        // not sure what size could help with
+        // Debugging purposes
         size_t size() const {
             return cards.size();
         }
